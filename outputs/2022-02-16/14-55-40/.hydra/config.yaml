@@ -1,0 +1,12 @@
+configs:
+  model:
+    hidden_layers:
+    - 64
+    - 32
+  training:
+    data_folder: data/processed/
+    output_folder: models/exp1
+    batch_size: 4
+    lr: 5.0e-05
+    epochs: 3
+    seed: 42
