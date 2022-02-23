@@ -1,12 +1,16 @@
 model:
-  hidden_layers: [
-    64, 32
-  ]
+  output_size: 10
+  channels_1: 32
+  channels_2: 64
+  kernel: 3
+  maxpool_kernel: 2
+  linear_hidden: 128
+  dropout_1: 0.25
+  dropout_2: 0.5
 
 training:
-  data_folder: data/processed/
   output_folder: models/exp1
-  batch_size: 4
-  lr: 5e-05
-  epochs: 3
+  batch_size: 64
+  lr: 0.01
+  epochs: 14
   seed: 42

@@ -15,3 +15,5 @@ installreqs:
 train:
 	python ./src/models/train_model.py
 
+dataset:
+	python ./src/data/make_dataset.py
