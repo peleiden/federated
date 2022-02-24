@@ -2,6 +2,7 @@ import os
 
 import hydra
 import torch
+import wandb
 
 from src.data.make_dataset import DATA_PATH, get_mnist_dataloader
 from src.models.architectures.conv import MNISTConvNet
@@ -26,14 +27,19 @@ def epoch(
         loss.backward()
         optimizer.step()
         if batch_idx % LOG_INTERVAL == 0:
+            update = batch_idx * len(data)
+            mean_loss = loss.item() / len(data)
             print(
                 "Train Epoch: {} [{}/{} ({:.0f}%)]\tMean loss: {:.4f}".format(
                     epoch,
-                    batch_idx * len(data),
+                    update,
                     len(dataloader.dataset),
                     100.0 * batch_idx / len(dataloader),
-                    loss.item() / len(data),
+                    mean_loss,
                 )
+            )
+            wandb.log(
+                {"epoch": epoch, "update": update * epoch + update, "loss": mean_loss}
             )
 
 
@@ -53,14 +59,16 @@ def evaluate(
             pred = output.argmax(1, keepdim=True)
             correct += (pred == target.view_as(pred)).sum().item()
     loss /= len(dataloader.dataset)
+    acc = 100 * correct / len(dataloader.dataset)
     print(
         "Eval: Mean loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
             loss,
             correct,
             len(dataloader.dataset),
-            100.0 * correct / len(dataloader.dataset),
+            acc,
         )
     )
+    wandb.log({"eval_loss": loss, "eval_acc": acc})
 
 
 @hydra.main(config_name="config.yaml", config_path=".")
@@ -70,6 +78,8 @@ def main(cfg: dict):
 
     print(f"{model_cfg = }")
     print(f"{train_cfg = }")
+
+    wandb.init(config=cfg, project="Federated Learning")
 
     torch.manual_seed(train_cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
