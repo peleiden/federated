@@ -27,14 +27,40 @@ def epoch(
         optimizer.step()
         if batch_idx % LOG_INTERVAL == 0:
             print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                "Train Epoch: {} [{}/{} ({:.0f}%)]\tMean loss: {:.4f}".format(
                     epoch,
                     batch_idx * len(data),
                     len(dataloader.dataset),
                     100.0 * batch_idx / len(dataloader),
-                    loss.item(),
+                    loss.item() / len(data),
                 )
             )
+
+
+def evaluate(
+    model: torch.nn.Module,
+    device: torch.device,
+    dataloader: torch.utils.data.DataLoader,
+    criterion: torch.nn.Module,
+):
+    model.eval()
+    loss, correct = 0, 0
+    with torch.no_grad():
+        for data, target in dataloader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            loss += criterion(output, target)
+            pred = output.argmax(1, keepdim=True)
+            correct += (pred == target.view_as(pred)).sum().item()
+    loss /= len(dataloader.dataset)
+    print(
+        "Eval: Mean loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+            loss,
+            correct,
+            len(dataloader.dataset),
+            100.0 * correct / len(dataloader.dataset),
+        )
+    )
 
 
 @hydra.main(config_name="config.yaml", config_path=".")
@@ -48,13 +74,19 @@ def main(cfg: dict):
     torch.manual_seed(train_cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    dataloader = get_mnist_dataloader(DATA_PATH, train_cfg.batch_size)
-    model = MNISTConvNet(**model_cfg).to(device)
+    # TODO: Use validation set instead of test set?
+    train_dataloader = get_mnist_dataloader(DATA_PATH, train_cfg.batch_size)
+    test_dataloader = get_mnist_dataloader(DATA_PATH, train_cfg.batch_size, train=False)
+    image_shape = train_dataloader.dataset[0][0][0].shape
+    model = MNISTConvNet(input_shape=image_shape, output_size=10, **model_cfg).to(
+        device
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=train_cfg.lr)
     criterion = torch.nn.CrossEntropyLoss()
 
     for i in range(train_cfg.epochs):
-        epoch(model, device, dataloader, optimizer, criterion, i + 1)
+        epoch(model, device, train_dataloader, optimizer, criterion, i + 1)
+        evaluate(model, device, test_dataloader, criterion)
 
     os.makedirs(train_cfg.output_folder, exist_ok=True)
     torch.save(

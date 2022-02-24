@@ -12,6 +12,7 @@ class MNISTConvNet(nn.Module):
 
     def __init__(
         self,
+        input_shape: tuple[int, int],
         output_size: int,
         channels_1: int,
         channels_2: int,
@@ -26,8 +27,12 @@ class MNISTConvNet(nn.Module):
         # Conversion from channels/kernels to linear dimension; See "Shape" section of [2] and [3]
         # [2] https://pytorch.org/docs/stable/generated/torch.nn.MaxPool2d.html
         # [3] https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+        kernel_diminishment = 2 * (kernel - 1)
         dim_after_flatten = int(
-            (kernel * ((channels_2 - maxpool_kernel) / maxpool_kernel + 1)) ** 2
+            channels_2
+            * (input_shape[0] - kernel_diminishment)
+            * (input_shape[1] - kernel_diminishment)
+            / maxpool_kernel**2
         )
 
         self.layers = nn.Sequential(

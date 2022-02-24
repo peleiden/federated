@@ -1,5 +1,4 @@
 model:
-  output_size: 10
   channels_1: 32
   channels_2: 64
   kernel: 3
@@ -12,5 +11,5 @@ training:
   output_folder: models/exp1
   batch_size: 64
   lr: 0.01
-  epochs: 14
+  epochs: 5
   seed: 42
