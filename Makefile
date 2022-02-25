@@ -13,6 +13,9 @@ installreqs:
 	pip install -r requirements_dev.txt
 
 train:
+	python ./src/models/train_federated.py
+
+traincentral:
 	python ./src/models/train_model.py
 
 dataset:

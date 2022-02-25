@@ -8,8 +8,12 @@ model:
   dropout_2: 0.5
 
 training:
-  output_folder: models/exp1
+  clients: 3
+  communication_rounds: 5
+  local_epochs: 2
+  clients_per_round: 2
+
   batch_size: 64
   lr: 0.01
-  epochs: 5
+  output_folder: models/exp1
   seed: 42

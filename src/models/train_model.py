@@ -17,6 +17,7 @@ def epoch(
     optimizer: torch.optim.Optimizer,
     criterion: torch.nn.Module,
     epoch: int,
+    use_wandb: bool = False,
 ):
     model.train()
     for batch_idx, (data, target) in enumerate(dataloader):
@@ -38,9 +39,14 @@ def epoch(
                     mean_loss,
                 )
             )
-            wandb.log(
-                {"epoch": epoch, "update": update * epoch + update, "loss": mean_loss}
-            )
+            if use_wandb:
+                wandb.log(
+                    {
+                        "epoch": epoch,
+                        "update": update * epoch + update,
+                        "loss": mean_loss,
+                    }
+                )
 
 
 def evaluate(
@@ -48,6 +54,7 @@ def evaluate(
     device: torch.device,
     dataloader: torch.utils.data.DataLoader,
     criterion: torch.nn.Module,
+    use_wandb: bool = False,
 ):
     model.eval()
     loss, correct = 0, 0
@@ -68,7 +75,8 @@ def evaluate(
             acc,
         )
     )
-    wandb.log({"eval_loss": loss, "eval_acc": acc})
+    if use_wandb:
+        wandb.log({"eval_loss": loss, "eval_acc": acc})
 
 
 @hydra.main(config_name="config.yaml", config_path=".")
@@ -94,7 +102,7 @@ def main(cfg: dict):
     optimizer = torch.optim.Adam(model.parameters(), lr=train_cfg.lr)
     criterion = torch.nn.CrossEntropyLoss()
 
-    for i in range(train_cfg.epochs):
+    for i in range(train_cfg.local_epochs):
         epoch(model, device, train_dataloader, optimizer, criterion, i + 1)
         evaluate(model, device, test_dataloader, criterion)
 

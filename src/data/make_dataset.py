@@ -1,14 +1,19 @@
 import os
 import sys
+from typing import Optional
 
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
 DATA_PATH = os.path.join(sys.path[0], "..", "..", "data")
 
 
 def get_mnist_dataloader(
-    data_folder: str, batch_size: int, train: bool = True, download=False
+    data_folder: str,
+    batch_size: int,
+    train: bool = True,
+    download=False,
+    split: Optional[list[int]] = None,
 ) -> DataLoader:
     transform = transforms.Compose(
         [
@@ -21,6 +26,8 @@ def get_mnist_dataloader(
     dataset = datasets.MNIST(
         data_folder, train=train, download=download, transform=transform
     )
+    if split is not None:
+        dataset = Subset(dataset, split)
     return DataLoader(dataset, batch_size, shuffle=train)
 
 
