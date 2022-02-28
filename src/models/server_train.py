@@ -10,6 +10,7 @@ from src.data.split_dataset import EqualIIDSplit
 from src.models.architectures.conv import MNISTConvNet
 
 
+from pelutils import log
 class ServerTrainer:
     def __init__(self, cfg: dict):
         self.model_cfg = cfg.configs.model
@@ -34,9 +35,9 @@ class ServerTrainer:
             self.train_cfg.clients, self.train_dataloader.dataset
         )
 
-        print("Created server trainer.")
-        print(f"{self.model_cfg = }")
-        print(f"{self.train_cfg = }")
+        log("Created server trainer.")
+        log(f"{self.model_cfg = }")
+        log(f"{self.train_cfg = }")
 
     def get_client_start_args(self) -> list[dict[str, Any]]:
         """

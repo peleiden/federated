@@ -1,6 +1,7 @@
 from typing import OrderedDict
 
 import torch
+from pelutils import log
 from torch.functional import Tensor
 
 from src.data.make_dataset import DATA_PATH, get_mnist_dataloader
@@ -40,8 +41,8 @@ class ClientTrainer:
         local_dataloader = get_mnist_dataloader(
             DATA_PATH, train_cfg.batch_size, split=split
         )
-        print(f"Creating local trainer with dataset of size {len(split)}")
-        print(f"{train_cfg = }")
+        log(f"Creating local trainer with dataset of size {len(split)}")
+        log(f"{train_cfg = }")
         return cls(train_cfg, model_cfg, local_dataloader)
 
     def train(self, state_dict: OrderedDict[str, Tensor]) -> OrderedDict[str, Tensor]:

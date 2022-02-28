@@ -7,6 +7,8 @@ import wandb
 from src.data.make_dataset import DATA_PATH, get_mnist_dataloader
 from src.models.architectures.conv import MNISTConvNet
 
+from pelutils import log
+
 LOG_INTERVAL = 100
 
 
@@ -30,7 +32,7 @@ def epoch(
         if batch_idx % LOG_INTERVAL == 0:
             update = batch_idx * len(data)
             mean_loss = loss.item() / len(data)
-            print(
+            log(
                 "Train Epoch: {} [{}/{} ({:.0f}%)]\tMean loss: {:.4f}".format(
                     epoch,
                     update,
@@ -67,7 +69,7 @@ def evaluate(
             correct += (pred == target.view_as(pred)).sum().item()
     loss /= len(dataloader.dataset)
     acc = 100 * correct / len(dataloader.dataset)
-    print(
+    log(
         "Eval: Mean loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
             loss,
             correct,
@@ -83,9 +85,10 @@ def evaluate(
 def main(cfg: dict):
     model_cfg = cfg.configs.model
     train_cfg = cfg.configs.training
+    log.configure(os.path.join(cfg.configs.training.output_folder, "training.log"))
 
-    print(f"{model_cfg = }")
-    print(f"{train_cfg = }")
+    log(f"{model_cfg = }")
+    log(f"{train_cfg = }")
 
     wandb.init(config=cfg, project="Federated Learning")
 
@@ -103,8 +106,8 @@ def main(cfg: dict):
     criterion = torch.nn.CrossEntropyLoss()
 
     for i in range(train_cfg.local_epochs):
-        epoch(model, device, train_dataloader, optimizer, criterion, i + 1)
-        evaluate(model, device, test_dataloader, criterion)
+        epoch(model, device, train_dataloader, optimizer, criterion, i + 1, use_wandb=True)
+        evaluate(model, device, test_dataloader, criterion, use_wandb=True)
 
     os.makedirs(train_cfg.output_folder, exist_ok=True)
     torch.save(
