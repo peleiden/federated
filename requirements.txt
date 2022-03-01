@@ -5,3 +5,10 @@ pelutils==0.6.9
 torch==1.10.2
 torchvision==0.11.3
 wandb==0.12.10
+pelutils==0.6.9
+psutil==5.8.0
+
+# Server stuff
+Flask==2.0.1
+Flask-Cors==3.0.10
+Flask-RESTful==0.3.9
