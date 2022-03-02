@@ -89,6 +89,7 @@ def logs():
 @_endpoint
 def telemetry():
     return {
+        "timestamp": time.time(),
         "process-memory-usage": psutil.Process().memory_info().rss,
         "total-memory-usage-pct": psutil.virtual_memory().percent,
         "total-memory-usage": psutil.virtual_memory().used,
