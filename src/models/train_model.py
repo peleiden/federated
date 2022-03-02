@@ -85,7 +85,6 @@ def evaluate(
 def main(cfg: dict):
     model_cfg = cfg.configs.model
     train_cfg = cfg.configs.training
-    log.configure(os.path.join(cfg.configs.training.output_folder, "training.log"))
 
     log(f"{model_cfg = }")
     log(f"{train_cfg = }")
@@ -95,7 +94,6 @@ def main(cfg: dict):
     torch.manual_seed(train_cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # TODO: Use validation set instead of test set?
     train_dataloader = get_mnist_dataloader(DATA_PATH, train_cfg.batch_size)
     test_dataloader = get_mnist_dataloader(DATA_PATH, train_cfg.batch_size, train=False)
     image_shape = train_dataloader.dataset[0][0][0].shape
@@ -109,11 +107,11 @@ def main(cfg: dict):
         epoch(model, device, train_dataloader, optimizer, criterion, i + 1, use_wandb=True)
         evaluate(model, device, test_dataloader, criterion, use_wandb=True)
 
-    os.makedirs(train_cfg.output_folder, exist_ok=True)
     torch.save(
-        model.state_dict(), os.path.join(train_cfg.output_folder, "mnist_conv.pt")
+        model.state_dict(), "mnist_conv.pt"
     )
 
 
 if __name__ == "__main__":
+    log.configure("training.log") # Hydra controls cwd
     main()

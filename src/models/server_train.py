@@ -32,7 +32,7 @@ class ServerTrainer:
 
         splitter = EqualIIDSplit()
         self.splits = splitter.split(
-            self.train_cfg.clients, self.train_dataloader.dataset
+            self.train_cfg.clients, self.train_cfg.local_data_amount, self.train_dataloader.dataset,
         )
 
         log("Created server trainer.")

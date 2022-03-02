@@ -11,7 +11,6 @@ from src.models.train_model import evaluate
 @hydra.main(config_name="config.yaml", config_path=".")
 def main(cfg: dict):
     server = ServerTrainer(cfg)
-    log.configure(os.path.join(cfg.configs.training.output_folder, "training.log"))
 
     clients = [
         ClientTrainer.build_from_start(**args)
@@ -30,4 +29,5 @@ def main(cfg: dict):
 
 
 if __name__ == "__main__":
+    log.configure("training.log") # Hydra controls cwd
     main()
