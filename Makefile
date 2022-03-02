@@ -6,7 +6,7 @@ format:
 	isort ./src
 
 savereqs:
-	pipreqs . --force 
+	pipreqs . --force
 
 installreqs:
 	pip install -r requirements.txt
