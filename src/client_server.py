@@ -1,6 +1,6 @@
 from __future__ import annotations
 from threading import Thread
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 import json
 import functools
 import os
@@ -14,6 +14,7 @@ from flask_restful import Api
 from flask_cors import CORS
 from pelutils import log, get_repo
 import psutil
+import torch.nn as nn
 
 # Do not import from src, as flask will not be able to resolve imports
 from client_utils import set_hostname, set_static_ip, get_ip
@@ -27,6 +28,10 @@ log.configure(logpath, append=True)
 client = Flask(__name__)
 Api(client)
 CORS(client)
+
+remote_addr: Optional[str]       = None
+config:      Optional[None]      = None
+model:       Optional[nn.Module] = None
 
 def _delayed_reboot(seconds=1):
     def reboot():
@@ -68,6 +73,20 @@ def _endpoint(fun: Callable):
                 "data": None,
                 "error-message": str(e),
             })
+    return fun_wrapper
+
+def _reserve(fun: Callable):
+    """ Used for annotating endpoint functions. This method ensures error handling
+    and guarantees that all returns are of the format
+    {
+        "data": whatever or null if error,
+        "error-message": str or null if no error
+    } """
+    @functools.wraps(fun)
+    def fun_wrapper():
+        if request.remote_addr != remote_addr:
+            raise IOError("Client is already reserved for training")
+        return fun()
     return fun_wrapper
 
 @client.get("/ping")
@@ -127,10 +146,38 @@ def configure():
     set_static_ip(f"192.168.0.{200+num}")
     _delayed_reboot()
 
+@client.post("/configure-training")
+@_endpoint
+@_reserve
+def configure_training():
+    global remote_addr, model
+    data = _get_post_data()
+
+    remote_addr = request.remote_addr
+
+@client.post("/train")
+@_endpoint
+@_reserve
+def train():
+    """ Performs a training. Expects a json of
+    {
+        "indices": list[int],
+        "augmentation": int that tells what augmentation to do,
+        "state_dict": base64 encoding of state_dict
+    } """
+    data = _get_post_data()
+
+@client.get("/end-training")
+@_endpoint
+def end_training():
+    global remote_addr, model
+    remote_addr = None
+    model = None
+
 if __name__ == "__main__":
     hostname = socket.gethostname()
     if hostname.startswith("SSR"):
         port = 3080 + int(hostname[3:])
     else:
         port = 3080
-    client.run(host="0.0.0.0", port=port, debug=False)
+    client.run(host="0.0.0.0", port=port, debug=False, processes=1, threaded=True)
