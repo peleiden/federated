@@ -6,7 +6,7 @@ from omegaconf import open_dict
 from pelutils import log
 from torch.functional import Tensor
 
-from src.data.make_dataset import DATA_PATH, get_mnist_dataloader
+from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist
 from src.data.split_dataset import EqualIIDSplit
 from src.models.architectures.conv import MNISTConvNet
 
@@ -17,11 +17,11 @@ class ServerTrainer:
         self.train_cfg = cfg.configs.training
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.train_dataloader = get_mnist_dataloader(
-            DATA_PATH, self.train_cfg.batch_size
+        self.train_dataloader = get_dataloader(
+            get_mnist(DATA_PATH, train=True), self.train_cfg.batch_size
         )
-        self.test_dataloader = get_mnist_dataloader(
-            DATA_PATH, self.train_cfg.batch_size, train=False
+        self.test_dataloader = get_dataloader(
+            get_mnist(DATA_PATH, train=False), self.train_cfg.batch_size
         )
         image_shape = self.train_dataloader.dataset[0][0][0].shape
         output_size = len(self.test_dataloader.dataset.classes)
@@ -36,41 +36,39 @@ class ServerTrainer:
             self.train_cfg.local_data_amount,
             self.train_dataloader.dataset,
         )
+        self.idx_to_split = list(self.splits.keys())
 
         log("Created server trainer.")
         log(f"{self.model_cfg = }")
         log(f"{self.train_cfg = }")
 
-    def get_client_start_args(self) -> list[dict[str, Any]]:
+    def get_client_start_args(self) -> dict[str, Any]:
         """
         Generate a list of start args for each clients where args correspond to those given to build_from_start
         """
-        client_args = list()
-        for i, (data_key, split) in enumerate(self.splits.items()):
-            client_train_cfg = self.train_cfg.copy()
-            with open_dict(client_train_cfg):
-                client_train_cfg.index = i
-                client_train_cfg.data_key = data_key
+        return dict(
+            train_cfg=self.train_cfg,
+            model_cfg=self.model_cfg,
+        )
 
-            client_args.append(
-                dict(
-                    train_cfg=client_train_cfg,
-                    model_cfg=self.model_cfg,
-                    split=split,
-                )
-            )
-        return client_args
-
-    def get_communication_round_args(self) -> dict[int, dict[str, Any]]:
+    def get_communication_round_args(self) -> list[dict[str, Any]]:
         """
         Chooses a numer of clients and prepares args for them.
         args should fit with ClientTrainer.train()
         """
-        client_args = dict()
+        client_args = list()
         for i in np.random.choice(
             self.train_cfg.clients, self.train_cfg.clients_per_round, replace=False
         ):
-            client_args[i] = dict(state_dict=self.model.state_dict())
+            data_key = self.idx_to_split[i]
+            client_args.append(
+                dict(
+                    state_dict=self.model.state_dict(),
+                    idx=i,
+                    data_key=data_key,
+                    split=self.splits[data_key],
+                )
+            )
         return client_args
 
     def aggregate(self, received_models: list[OrderedDict[str, Tensor]]):
