@@ -29,5 +29,5 @@ def main(cfg: dict):
 
 
 if __name__ == "__main__":
-    log.configure("training.log") # Hydra controls cwd
+    log.configure("training.log")  # Hydra controls cwd
     main()

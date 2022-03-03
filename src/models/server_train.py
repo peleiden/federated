@@ -3,6 +3,7 @@ from typing import Any, OrderedDict
 import numpy as np
 import torch
 from omegaconf import open_dict
+from pelutils import log
 from torch.functional import Tensor
 
 from src.data.make_dataset import DATA_PATH, get_mnist_dataloader
@@ -10,7 +11,6 @@ from src.data.split_dataset import EqualIIDSplit
 from src.models.architectures.conv import MNISTConvNet
 
 
-from pelutils import log
 class ServerTrainer:
     def __init__(self, cfg: dict):
         self.model_cfg = cfg.configs.model
@@ -32,7 +32,9 @@ class ServerTrainer:
 
         splitter = EqualIIDSplit()
         self.splits = splitter.split(
-            self.train_cfg.clients, self.train_cfg.local_data_amount, self.train_dataloader.dataset,
+            self.train_cfg.clients,
+            self.train_cfg.local_data_amount,
+            self.train_dataloader.dataset,
         )
 
         log("Created server trainer.")

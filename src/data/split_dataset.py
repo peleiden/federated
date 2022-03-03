@@ -11,7 +11,9 @@ class Splitter(ABC):
     """
 
     @abstractmethod
-    def split(self, clients: int, local_data_amount: int, dataset: VisionDataset) -> dict[str, list[int]]:
+    def split(
+        self, clients: int, local_data_amount: int, dataset: VisionDataset
+    ) -> dict[str, list[int]]:
         raise NotImplementedError()
 
 
@@ -20,9 +22,11 @@ class EqualIIDSplit(Splitter):
     Each client gets an equally-sized, randomly chosen dataset.
     """
 
-    def split(self, clients: int, local_data_amount: int, dataset: VisionDataset) -> dict[str, list[int]]:
+    def split(
+        self, clients: int, local_data_amount: int, dataset: VisionDataset
+    ) -> dict[str, list[int]]:
         idx = np.arange(len(dataset))
         np.random.shuffle(idx)
-        idx = idx[:local_data_amount*clients]
+        idx = idx[: local_data_amount * clients]
         splits = np.array_split(idx, clients)
         return {f"iid-sample-{i}": list(split) for i, split in enumerate(splits)}

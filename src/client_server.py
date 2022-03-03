@@ -1,23 +1,24 @@
 from __future__ import annotations
-from threading import Thread
-from typing import Any, Callable, Optional
-import json
+
 import functools
+import json
 import os
 import shlex
 import socket
 import subprocess
 import time
+from threading import Thread
+from typing import Any, Callable, Optional
 
-from flask import Flask, jsonify, request
-from flask_restful import Api
-from flask_cors import CORS
-from pelutils import log, get_repo
 import psutil
 import torch.nn as nn
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from flask_restful import Api
+from pelutils import get_repo, log
 
 # Do not import from src, as flask will not be able to resolve imports
-from client_utils import set_hostname, set_static_ip, get_ip
+from client_utils import get_ip, set_hostname, set_static_ip
 
 # Configure logging
 os.makedirs("logs", exist_ok=True)
@@ -29,9 +30,10 @@ client = Flask(__name__)
 Api(client)
 CORS(client)
 
-remote_addr: Optional[str]       = None
-config:      Optional[None]      = None
-model:       Optional[nn.Module] = None
+remote_addr: Optional[str] = None
+config: Optional[None] = None
+model: Optional[nn.Module] = None
+
 
 def _delayed_reboot(seconds=1):
     def reboot():
@@ -39,24 +41,28 @@ def _delayed_reboot(seconds=1):
         time.sleep(seconds)
         log("Rebooting now")
         os.system("reboot")
+
     t = Thread(target=reboot)
     t.start()
 
+
 def _get_post_data() -> dict[str, Any]:
-    """ Returns data from a post request. Assumes json """
+    """Returns data from a post request. Assumes json"""
     # Return a dict parsed from json if possible
     if request.form:
         return request.form.to_dict()
     # Else parse raw data directly
     return json.loads(request.data.decode("utf-8"))
 
+
 def _endpoint(fun: Callable):
-    """ Used for annotating endpoint functions. This method ensures error handling
+    """Used for annotating endpoint functions. This method ensures error handling
     and guarantees that all returns are of the format
     {
         "data": whatever or null if error,
         "error-message": str or null if no error
-    } """
+    }"""
+
     @functools.wraps(fun)
     def fun_wrapper():
         log("Executing API endpoint %s" % fun.__name__)
@@ -69,25 +75,32 @@ def _endpoint(fun: Callable):
             return jsonify(return_value)
         except Exception as e:
             log.log_with_stacktrace(e)
-            return jsonify({
-                "data": None,
-                "error-message": str(e),
-            })
+            return jsonify(
+                {
+                    "data": None,
+                    "error-message": str(e),
+                }
+            )
+
     return fun_wrapper
 
+
 def _reserve(fun: Callable):
-    """ Used for annotating endpoint functions. This method ensures error handling
+    """Used for annotating endpoint functions. This method ensures error handling
     and guarantees that all returns are of the format
     {
         "data": whatever or null if error,
         "error-message": str or null if no error
-    } """
+    }"""
+
     @functools.wraps(fun)
     def fun_wrapper():
         if request.remote_addr != remote_addr:
             raise IOError("Client is already reserved for training")
         return fun()
+
     return fun_wrapper
+
 
 @client.get("/ping")
 @_endpoint
@@ -98,11 +111,13 @@ def ping():
         "commit": get_repo()[1],
     }
 
+
 @client.get("/logs")
 @_endpoint
 def logs():
     with open(logpath) as logfile:
         return logfile.read()
+
 
 @client.get("/telemetry")
 @_endpoint
@@ -119,17 +134,20 @@ def telemetry():
         "cpu-usage-pct": psutil.cpu_percent(0.1, percpu=True),
     }
 
+
 @client.post("/command")
 @_endpoint
 def command():
-    """ Issue a list of system commands to the Pi.
-    Expects the json to be a list of strings. """
+    """Issue a list of system commands to the Pi.
+    Expects the json to be a list of strings."""
     cmds = _get_post_data()
     for cmd in cmds:
         if cmd == "reboot":
             _delayed_reboot()
             return
-        p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         code = p.wait()
         if code:
             raise RuntimeError(
@@ -138,6 +156,7 @@ def command():
                 f"stderr: {p.stderr.read().decode('utf-8')}"
             )
 
+
 @client.get("/configure")
 @_endpoint
 def configure():
@@ -145,6 +164,7 @@ def configure():
     set_hostname(f"SSR{num}")
     set_static_ip(f"192.168.0.{200+num}")
     _delayed_reboot()
+
 
 @client.post("/configure-training")
 @_endpoint
@@ -155,17 +175,19 @@ def configure_training():
 
     remote_addr = request.remote_addr
 
+
 @client.post("/train")
 @_endpoint
 @_reserve
 def train():
-    """ Performs a training. Expects a json of
+    """Performs a training. Expects a json of
     {
         "indices": list[int],
         "augmentation": int that tells what augmentation to do,
         "state_dict": base64 encoding of state_dict
-    } """
+    }"""
     data = _get_post_data()
+
 
 @client.get("/end-training")
 @_endpoint
@@ -173,6 +195,7 @@ def end_training():
     global remote_addr, model
     remote_addr = None
     model = None
+
 
 if __name__ == "__main__":
     hostname = socket.gethostname()

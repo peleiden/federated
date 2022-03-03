@@ -3,11 +3,10 @@ import os
 import hydra
 import torch
 import wandb
+from pelutils import log
 
 from src.data.make_dataset import DATA_PATH, get_mnist_dataloader
 from src.models.architectures.conv import MNISTConvNet
-
-from pelutils import log
 
 LOG_INTERVAL = 100
 
@@ -104,14 +103,14 @@ def main(cfg: dict):
     criterion = torch.nn.CrossEntropyLoss()
 
     for i in range(train_cfg.local_epochs):
-        epoch(model, device, train_dataloader, optimizer, criterion, i + 1, use_wandb=True)
+        epoch(
+            model, device, train_dataloader, optimizer, criterion, i + 1, use_wandb=True
+        )
         evaluate(model, device, test_dataloader, criterion, use_wandb=True)
 
-    torch.save(
-        model.state_dict(), "mnist_conv.pt"
-    )
+    torch.save(model.state_dict(), "mnist_conv.pt")
 
 
 if __name__ == "__main__":
-    log.configure("training.log") # Hydra controls cwd
+    log.configure("training.log")  # Hydra controls cwd
     main()
