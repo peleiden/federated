@@ -5,6 +5,9 @@ format:
 	black ./src
 	isort ./src
 
+test:
+	python -m pytest tests --cov=src
+
 savereqs:
 	pipreqs . --force
 

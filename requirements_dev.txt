@@ -5,3 +5,4 @@ black
 isort
 pipreqs
 pytest
+pytest-cov
