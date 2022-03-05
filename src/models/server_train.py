@@ -64,7 +64,7 @@ class ServerTrainer:
             client_args.append(
                 dict(
                     state_dict=self.model.state_dict(),
-                    idx=i,
+                    idx=int(i),
                     data_key=data_key,
                     split=self.splits[data_key],
                 )

@@ -23,3 +23,6 @@ traincentral:
 
 dataset:
 	python ./src/data/make_dataset.py
+
+start-client-server:
+	python src/client_server.py

@@ -29,4 +29,4 @@ class EqualIIDSplit(Splitter):
         np.random.shuffle(idx)
         idx = idx[: local_data_amount * clients]
         splits = np.array_split(idx, clients)
-        return {f"iid-sample-{i}": list(split) for i, split in enumerate(splits)}
+        return {f"iid-sample-{i}": split.tolist() for i, split in enumerate(splits)}

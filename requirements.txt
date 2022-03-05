@@ -6,7 +6,8 @@ torch==1.10.2
 torchvision==0.11.3
 wandb==0.12.10
 pelutils==0.6.9
-psutil==5.8.0
+psutil==5.9.0
+requests==2.27.1
 
 # Server stuff
 Flask==2.0.1

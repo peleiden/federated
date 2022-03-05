@@ -14,11 +14,12 @@ class ClientTrainer:
         self,
         train_cfg: dict,
         model_cfg: dict,
+        data_path=None,
     ):
         self.train_cfg = train_cfg
         self.model_cfg = model_cfg
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.full_dataset = get_mnist(DATA_PATH, train=True)
+        self.full_dataset = get_mnist(data_path or DATA_PATH, train=True)
         image_shape = self.full_dataset[0][0].shape[1:]
         output_size = len(self.full_dataset.classes)
 
@@ -27,7 +28,7 @@ class ClientTrainer:
             output_size=output_size,
             **self.model_cfg,
         ).to(self.device)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.train_cfg.lr)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.train_cfg["lr"])
         self.criterion = torch.nn.CrossEntropyLoss()
 
     def run_round(
@@ -43,10 +44,10 @@ class ClientTrainer:
         self.model.load_state_dict(state_dict)
         log(f"Running as client {idx} with data {data_key}")
         local_dataloader = get_dataloader(
-            self.full_dataset, self.train_cfg.batch_size, split
+            self.full_dataset, self.train_cfg["batch_size"], split
         )
 
-        for i in range(self.train_cfg.local_epochs):
+        for i in range(self.train_cfg["local_epochs"]):
             epoch(
                 self.model,
                 self.device,

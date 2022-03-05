@@ -7,18 +7,19 @@ import shlex
 import socket
 import subprocess
 import time
+import traceback as tb
 from threading import Thread
 from typing import Any, Callable, Optional
 
 import psutil
-import torch.nn as nn
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_restful import Api
 from pelutils import get_repo, log
 
 # Do not import from src, as flask will not be able to resolve imports
-from client_utils import get_ip, set_hostname, set_static_ip
+from client_utils import get_ip, set_hostname, set_static_ip, state_dict_from_base64, state_dict_to_base64
+from models.client_train import ClientTrainer
 
 # Configure logging
 os.makedirs("logs", exist_ok=True)
@@ -32,7 +33,7 @@ CORS(client)
 
 remote_addr: Optional[str] = None
 config: Optional[None] = None
-model: Optional[nn.Module] = None
+trainer: Optional[ClientTrainer] = None
 
 
 def _delayed_reboot(seconds=1):
@@ -45,7 +46,6 @@ def _delayed_reboot(seconds=1):
     t = Thread(target=reboot)
     t.start()
 
-
 def _get_post_data() -> dict[str, Any]:
     """Returns data from a post request. Assumes json"""
     # Return a dict parsed from json if possible
@@ -53,7 +53,6 @@ def _get_post_data() -> dict[str, Any]:
         return request.form.to_dict()
     # Else parse raw data directly
     return json.loads(request.data.decode("utf-8"))
-
 
 def _endpoint(fun: Callable):
     """Used for annotating endpoint functions. This method ensures error handling
@@ -65,25 +64,27 @@ def _endpoint(fun: Callable):
 
     @functools.wraps(fun)
     def fun_wrapper():
+        global remote_addr, trainer
         log("Executing API endpoint %s" % fun.__name__)
         try:
             return_value = {
                 "data": fun(),
                 "error-message": None,
             }
-            log("Returning %s" % return_value)
+            log("Successfully calculated return value")
             return jsonify(return_value)
         except Exception as e:
-            log.log_with_stacktrace(e)
+            log.error(tb.format_exc())
             return jsonify(
                 {
                     "data": None,
                     "error-message": str(e),
                 }
-            )
+            ), 500
+        remote_addr = None
+        trainer = None
 
     return fun_wrapper
-
 
 def _reserve(fun: Callable):
     """Used for annotating endpoint functions. This method ensures error handling
@@ -95,12 +96,11 @@ def _reserve(fun: Callable):
 
     @functools.wraps(fun)
     def fun_wrapper():
-        if request.remote_addr != remote_addr:
+        if remote_addr is not None and request.remote_addr != remote_addr:
             raise IOError("Client is already reserved for training")
         return fun()
 
     return fun_wrapper
-
 
 @client.get("/ping")
 @_endpoint
@@ -111,13 +111,11 @@ def ping():
         "commit": get_repo()[1],
     }
 
-
 @client.get("/logs")
 @_endpoint
 def logs():
     with open(logpath) as logfile:
         return logfile.read()
-
 
 @client.get("/telemetry")
 @_endpoint
@@ -133,7 +131,6 @@ def telemetry():
         "cpu-max-freq": psutil.cpu_freq().max,
         "cpu-usage-pct": psutil.cpu_percent(0.1, percpu=True),
     }
-
 
 @client.post("/command")
 @_endpoint
@@ -156,7 +153,6 @@ def command():
                 f"stderr: {p.stderr.read().decode('utf-8')}"
             )
 
-
 @client.get("/configure")
 @_endpoint
 def configure():
@@ -165,36 +161,38 @@ def configure():
     set_static_ip(f"192.168.0.{200+num}")
     _delayed_reboot()
 
-
 @client.post("/configure-training")
 @_endpoint
 @_reserve
 def configure_training():
-    global remote_addr, model
-    data = _get_post_data()
-
+    global remote_addr, trainer
+    start_args = _get_post_data()
+    trainer = ClientTrainer(**start_args, data_path=os.path.abspath(os.path.join(__file__, "..", "..", "data")))
     remote_addr = request.remote_addr
 
-
-@client.post("/train")
+@client.post("/train-round")
 @_endpoint
 @_reserve
-def train():
-    """Performs a training. Expects a json of
+def train_round() -> str:
+    """ Performs a training round. Expects a json of
     {
         "indices": list[int],
         "augmentation": int that tells what augmentation to do,
         "state_dict": base64 encoding of state_dict
-    }"""
-    data = _get_post_data()
-
+    } """
+    global trainer
+    args = _get_post_data()
+    args["state_dict"] = state_dict_from_base64(args["state_dict"])
+    state_dict = trainer.run_round(**args)
+    print(hash(state_dict_to_base64(state_dict)))
+    return state_dict_to_base64(state_dict)
 
 @client.get("/end-training")
 @_endpoint
 def end_training():
-    global remote_addr, model
+    global remote_addr, trainer
     remote_addr = None
-    model = None
+    trainer = None
 
 
 if __name__ == "__main__":
@@ -202,5 +200,5 @@ if __name__ == "__main__":
     if hostname.startswith("SSR"):
         port = 3080 + int(hostname[3:])
     else:
-        port = 3080
+        port = os.environ.get("PORT", 3080)
     client.run(host="0.0.0.0", port=port, debug=False, processes=1, threaded=True)
