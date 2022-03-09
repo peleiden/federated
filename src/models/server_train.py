@@ -2,7 +2,6 @@ from typing import Any, OrderedDict
 
 import numpy as np
 import torch
-from omegaconf import open_dict
 from pelutils import log
 from torch.functional import Tensor
 

@@ -11,8 +11,8 @@ training:
   clients: 10
   communication_rounds: 5
   local_epochs: 2
-  clients_per_round: 3
-  local_data_amount: 500
+  clients_per_round: 5
+  local_data_amount: 1000
   batch_size: 64
   lr: 0.001
   seed: 42
