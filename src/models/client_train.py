@@ -4,8 +4,8 @@ import torch
 from pelutils import log
 from torch.functional import Tensor
 
-from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist
-from src.models.architectures.conv import MNISTConvNet
+from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist, get_cifar10
+from src.models.architectures.conv import SimpleConv
 from src.models.train_model import epoch
 
 
@@ -19,11 +19,13 @@ class ClientTrainer:
         self.train_cfg = train_cfg
         self.model_cfg = model_cfg
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.full_dataset = get_mnist(data_path or DATA_PATH, train=True)
-        image_shape = self.full_dataset[0][0].shape[1:]
+
+        get_data = get_cifar10 if self.train_cfg.dataset == "cifar10" else get_mnist
+        self.full_dataset = get_data(data_path or DATA_PATH, train=True)
+        image_shape = self.full_dataset[0][0].shape
         output_size = len(self.full_dataset.classes)
 
-        self.model = MNISTConvNet(
+        self.model = SimpleConv(
             input_shape=image_shape,
             output_size=output_size,
             **self.model_cfg,

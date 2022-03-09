@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class MNISTConvNet(nn.Module):
+class SimpleConv(nn.Module):
     """
     Currently hard-coded to two convolutional layers followed by two linear layers.
     Arch and default parameters are taken from [1].
@@ -12,7 +12,7 @@ class MNISTConvNet(nn.Module):
 
     def __init__(
         self,
-        input_shape: tuple[int, int],
+        input_shape: tuple[int, int, int],
         output_size: int,
         channels_1: int,
         channels_2: int,
@@ -30,14 +30,14 @@ class MNISTConvNet(nn.Module):
         kernel_diminishment = 2 * (kernel - 1)
         dim_after_flatten = int(
             channels_2
-            * (input_shape[0] - kernel_diminishment)
             * (input_shape[1] - kernel_diminishment)
+            * (input_shape[2] - kernel_diminishment)
             / maxpool_kernel**2
         )
 
         self.layers = nn.Sequential(
             # Conv 1
-            nn.Conv2d(1, channels_1, kernel),
+            nn.Conv2d(input_shape[0], channels_1, kernel),
             nn.ReLU(),
             # Conv 2
             nn.Conv2d(channels_1, channels_2, kernel),

@@ -1,5 +1,5 @@
 from src.client_utils import state_dict_to_base64, state_dict_from_base64
-from src.models.architectures.conv import MNISTConvNet
+from src.models.architectures.conv import SimpleConv
 
 import torch
 
@@ -36,7 +36,7 @@ def validate_state_dicts(model_state_dict_1, model_state_dict_2) -> bool:
     return True
 
 def test_base64():
-    net = MNISTConvNet((100, 100), 10, 16, 8, 3, 2, 50, 0.1, 0.1)
+    net = SimpleConv((1, 100, 100), 10, 16, 8, 3, 2, 50, 0.1, 0.1)
     b64 = state_dict_to_base64(net.state_dict())
     state_dict = state_dict_from_base64(b64)
     assert validate_state_dicts(net.state_dict(), state_dict)

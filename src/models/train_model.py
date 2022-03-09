@@ -5,8 +5,8 @@ import torch
 import wandb
 from pelutils import log
 
-from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist
-from src.models.architectures.conv import MNISTConvNet
+from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist, get_cifar10
+from src.models.architectures.conv import SimpleConv
 
 LOG_INTERVAL = 100
 
@@ -92,15 +92,16 @@ def main(cfg: dict):
 
     torch.manual_seed(train_cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    get_data = get_cifar10 if train_cfg.dataset == "cifar10" else get_mnist
 
     train_dataloader = get_dataloader(
-        get_mnist(DATA_PATH, train=True), train_cfg.batch_size
+        get_data(DATA_PATH, train=True), train_cfg.batch_size
     )
     test_dataloader = get_dataloader(
-        get_mnist(DATA_PATH, train=False), train_cfg.batch_size
+        get_data(DATA_PATH, train=False), train_cfg.batch_size
     )
-    image_shape = train_dataloader.dataset[0][0][0].shape
-    model = MNISTConvNet(input_shape=image_shape, output_size=10, **model_cfg).to(
+    image_shape = train_dataloader.dataset[0][0].shape
+    model = SimpleConv(input_shape=image_shape, output_size=10, **model_cfg).to(
         device
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=train_cfg.lr)

@@ -16,3 +16,4 @@ training:
   batch_size: 64
   lr: 0.001
   seed: 42
+  dataset: cifar10

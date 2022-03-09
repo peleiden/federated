@@ -6,9 +6,9 @@ from omegaconf import open_dict
 from pelutils import log
 from torch.functional import Tensor
 
-from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist
+from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist, get_cifar10
 from src.data.split_dataset import EqualIIDSplit
-from src.models.architectures.conv import MNISTConvNet
+from src.models.architectures.conv import SimpleConv
 
 
 class ServerTrainer:
@@ -17,15 +17,17 @@ class ServerTrainer:
         self.train_cfg = cfg.configs.training
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+        get_data = get_cifar10 if self.train_cfg.dataset == "cifar10" else get_mnist
+
         self.train_dataloader = get_dataloader(
-            get_mnist(DATA_PATH, train=True), self.train_cfg.batch_size
+            get_data(DATA_PATH, train=True), self.train_cfg.batch_size
         )
         self.test_dataloader = get_dataloader(
-            get_mnist(DATA_PATH, train=False), self.train_cfg.batch_size
+            get_data(DATA_PATH, train=False), self.train_cfg.batch_size
         )
-        image_shape = self.train_dataloader.dataset[0][0][0].shape
+        image_shape = self.train_dataloader.dataset[0][0].shape
         output_size = len(self.test_dataloader.dataset.classes)
-        self.model = MNISTConvNet(
+        self.model = SimpleConv(
             input_shape=image_shape, output_size=output_size, **self.model_cfg
         ).to(self.device)
         self.criterion = torch.nn.CrossEntropyLoss()

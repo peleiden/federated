@@ -24,15 +24,34 @@ def get_dataloader(
 def get_mnist(
     data_folder: str, train: bool = True, download: bool = False
 ) -> VisionDataset:
+    # Params taken from https://github.com/pytorch/examples/blob/master/mnist/main.py
     transform = transforms.Compose(
         [
             transforms.ToTensor(),
             transforms.Normalize(
                 (0.1307,), (0.3081,)
-            ),  # Taken from https://github.com/pytorch/examples/blob/master/mnist/main.py
+            ),
         ]
     )
     dataset = datasets.MNIST(
+        data_folder, train=train, download=download, transform=transform
+    )
+    return dataset
+
+
+def get_cifar10(
+    data_folder: str, train: bool = True, download: bool = False
+) -> VisionDataset:
+    # Params taken from https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
+    transform = transforms.Compose(
+        [
+            # transforms.RandomCrop(32, padding=4),
+            # transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ]
+    )
+    dataset = datasets.CIFAR10(
         data_folder, train=train, download=download, transform=transform
     )
     return dataset
@@ -43,4 +62,6 @@ if __name__ == "__main__":
     print("Downloading data to disk if not already there ...")
     get_mnist(DATA_PATH, train=True, download=True)
     get_mnist(DATA_PATH, train=False, download=True)
+    get_cifar10(DATA_PATH, train=True, download=True)
+    get_cifar10(DATA_PATH, train=False, download=True)
     print("Done.")
