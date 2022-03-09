@@ -16,7 +16,7 @@ class ServerTrainer:
         self.train_cfg = cfg.configs.training
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        get_data = get_cifar10 if self.train_cfg.dataset == "cifar10" else get_mnist
+        get_data = get_cifar10 if self.train_cfg["dataset"] == "cifar10" else get_mnist
 
         self.train_dataloader = get_dataloader(
             get_data(DATA_PATH, train=True), self.train_cfg.batch_size

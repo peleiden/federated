@@ -31,7 +31,7 @@ def epoch(
         if batch_idx % LOG_INTERVAL == 0:
             update = batch_idx * len(data)
             mean_loss = loss.item() / len(data)
-            log(
+            log.debug(
                 "Train Epoch: {} [{}/{} ({:.0f}%)]\tMean loss: {:.4f}".format(
                     epoch,
                     update,
@@ -56,7 +56,7 @@ def evaluate(
     dataloader: torch.utils.data.DataLoader,
     criterion: torch.nn.Module,
     use_wandb: bool = False,
-):
+) -> tuple[float, float]:
     model.eval()
     loss, correct = 0, 0
     with torch.no_grad():
@@ -69,7 +69,7 @@ def evaluate(
     loss /= len(dataloader.dataset)
     acc = 100 * correct / len(dataloader.dataset)
     log(
-        "Eval: Mean loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n".format(
+        "Eval: Mean loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)".format(
             loss,
             correct,
             len(dataloader.dataset),
@@ -78,6 +78,8 @@ def evaluate(
     )
     if use_wandb:
         wandb.log({"eval_loss": loss, "eval_acc": acc})
+
+    return acc, loss
 
 
 @hydra.main(config_name="config.yaml", config_path=".")
@@ -92,7 +94,7 @@ def main(cfg: dict):
 
     torch.manual_seed(train_cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    get_data = get_cifar10 if train_cfg.dataset == "cifar10" else get_mnist
+    get_data = get_cifar10 if train_cfg["dataset"] == "cifar10" else get_mnist
 
     train_dataloader = get_dataloader(
         get_data(DATA_PATH, train=True), train_cfg.batch_size
@@ -100,7 +102,7 @@ def main(cfg: dict):
     test_dataloader = get_dataloader(
         get_data(DATA_PATH, train=False), train_cfg.batch_size
     )
-    image_shape = train_dataloader.dataset[0][0].shape
+    image_shape = train_dataloader["dataset"][0][0].shape
     model = SimpleConv(input_shape=image_shape, output_size=10, **model_cfg).to(
         device
     )

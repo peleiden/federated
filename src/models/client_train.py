@@ -20,7 +20,7 @@ class ClientTrainer:
         self.model_cfg = model_cfg
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        get_data = get_cifar10 if self.train_cfg.dataset == "cifar10" else get_mnist
+        get_data = get_cifar10 if self.train_cfg["dataset"] == "cifar10" else get_mnist
         self.full_dataset = get_data(data_path or DATA_PATH, train=True)
         image_shape = self.full_dataset[0][0].shape
         output_size = len(self.full_dataset.classes)

@@ -17,17 +17,12 @@ import psutil
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_restful import Api
-from pelutils import get_repo, log
+from pelutils import get_repo, log, TickTock
 
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.client_utils import get_ip, set_hostname, set_static_ip, state_dict_from_base64, state_dict_to_base64
 from src.models.client_train import ClientTrainer
-
-# Configure logging
-os.makedirs("logs", exist_ok=True)
-logpath = f"logs/{socket.gethostname()}.log"
-log.configure(logpath, append=True)
 
 # Create client server
 client = Flask(__name__)
@@ -67,7 +62,6 @@ def _endpoint(fun: Callable):
 
     @functools.wraps(fun)
     def fun_wrapper():
-        global remote_addr, trainer
         log("Executing API endpoint %s" % fun.__name__)
         try:
             return_value = {
@@ -84,8 +78,6 @@ def _endpoint(fun: Callable):
                     "error-message": str(e),
                 }
             ), 500
-        remote_addr = None
-        trainer = None
 
     return fun_wrapper
 
@@ -185,10 +177,25 @@ def train_round() -> str:
     } """
     global trainer
     args = _get_post_data()
+    timings = dict()
+    tt = TickTock()
+
+    tt.tick()
     args["state_dict"] = state_dict_from_base64(args["state_dict"])
+    timings["decode"] = tt.tock()
+
+    tt.tick()
     state_dict = trainer.run_round(**args)
-    print(hash(state_dict_to_base64(state_dict)))
-    return state_dict_to_base64(state_dict)
+    timings["train"] = tt.tock()
+
+    tt.tick()
+    b64 = state_dict_to_base64(state_dict)
+    timings["encode"] = tt.tock()
+
+    return {
+        "state_dict": b64,
+        "timings": timings,
+    }
 
 @client.get("/end-training")
 @_endpoint
@@ -204,4 +211,9 @@ if __name__ == "__main__":
         port = 3080 + int(hostname[3:])
     else:
         port = os.environ.get("PORT", 3080)
+
+    # Configure logging
+    os.makedirs("logs", exist_ok=True)
+    logpath = f"logs/{socket.gethostname()}:{port}.log"
+    log.configure(logpath, append=True)
     client.run(host="0.0.0.0", port=port, debug=False, processes=1, threaded=True)
