@@ -6,8 +6,10 @@ import os
 import shlex
 import socket
 import subprocess
+import sys
 import time
 import traceback as tb
+from pathlib import Path
 from threading import Thread
 from typing import Any, Callable, Optional
 
@@ -17,9 +19,10 @@ from flask_cors import CORS
 from flask_restful import Api
 from pelutils import get_repo, log
 
-# Do not import from src, as flask will not be able to resolve imports
-from client_utils import get_ip, set_hostname, set_static_ip, state_dict_from_base64, state_dict_to_base64
-from models.client_train import ClientTrainer
+sys.path.append(str(Path(__file__).parent.parent))
+
+from src.client_utils import get_ip, set_hostname, set_static_ip, state_dict_from_base64, state_dict_to_base64
+from src.models.client_train import ClientTrainer
 
 # Configure logging
 os.makedirs("logs", exist_ok=True)
