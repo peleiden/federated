@@ -155,7 +155,7 @@ def command():
 def configure():
     num = int(request.args.get("num"))
     set_hostname(f"SSR{num}")
-    set_static_ip(f"192.168.0.{200+num}")
+    # set_static_ip(f"192.168.0.{200+num}")
     _delayed_reboot()
 
 @client.post("/configure-training")
