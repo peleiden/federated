@@ -24,5 +24,8 @@ traincentral:
 dataset:
 	python ./src/data/make_dataset.py
 
+sudo-dataset:
+	sudo python3 ./src/data/make_dataset.py
+
 start-client-server:
 	python src/client_server.py

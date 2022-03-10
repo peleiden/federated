@@ -17,7 +17,7 @@ import psutil
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_restful import Api
-from pelutils import get_repo, log, TickTock
+from pelutils import get_repo, log, TickTock, Levels
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -133,7 +133,9 @@ def command():
     """Issue a list of system commands to the Pi.
     Expects the json to be a list of strings."""
     cmds = _get_post_data()
+    log("Got commands:", *cmds)
     for cmd in cmds:
+        log.debug("Command: %s" % cmd)
         if cmd == "reboot":
             _delayed_reboot()
             return
@@ -215,5 +217,5 @@ if __name__ == "__main__":
     # Configure logging
     os.makedirs("logs", exist_ok=True)
     logpath = f"logs/{socket.gethostname()}:{port}.log"
-    log.configure(logpath, append=True)
+    log.configure(logpath, append=True, print_level=Levels.DEBUG)
     client.run(host="0.0.0.0", port=port, debug=False, processes=1, threaded=True)
