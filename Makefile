@@ -16,7 +16,7 @@ installreqs:
 	pip install -r requirements_dev.txt
 
 train:
-	python ./src/models/train_federated.py
+	python src/models/train_federated.py
 
 traincentral:
 	python ./src/models/train_model.py
@@ -29,3 +29,8 @@ sudo-dataset:
 
 start-client-server:
 	python src/client_server.py
+
+## Delete all compiled Python files
+clean:
+	find . -type f -name "*.py[co]" -delete
+	find . -type d -name "__pycache__" -delete
