@@ -68,7 +68,7 @@ def _endpoint(fun: Callable):
                 "data": fun(),
                 "error-message": None,
             }
-            log("Successfully calculated return value")
+            log("Successfully got return value")
             return jsonify(return_value)
         except Exception as e:
             log.error(tb.format_exc())
