@@ -21,7 +21,7 @@ from pelutils import get_repo, log, TickTock, Levels
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.client_utils import get_ip, set_hostname, set_static_ip, state_dict_from_base64, state_dict_to_base64
+from src.client_utils import get_ip, state_dict_from_base64, state_dict_to_base64, is_rpi
 from src.models.client_train import ClientTrainer
 
 # Create client server
@@ -29,7 +29,7 @@ client = Flask(__name__)
 Api(client)
 CORS(client)
 
-remote_addr: Optional[str] = None
+training_id: Optional[int] = None
 config: Optional[None] = None
 trainer: Optional[ClientTrainer] = None
 
@@ -39,7 +39,7 @@ def _delayed_reboot(seconds=1):
         log(f"Rebooting in {seconds} seconds")
         time.sleep(seconds)
         log("Rebooting now")
-        os.system("reboot")
+        os.system("sudo reboot")
 
     t = Thread(target=reboot)
     t.start()
@@ -68,7 +68,7 @@ def _endpoint(fun: Callable):
                 "data": fun(),
                 "error-message": None,
             }
-            log("Successfully calculated return value")
+            log("Successfully got return value")
             return jsonify(return_value)
         except Exception as e:
             log.error(tb.format_exc())
@@ -81,21 +81,16 @@ def _endpoint(fun: Callable):
 
     return fun_wrapper
 
-def _reserve(fun: Callable):
+def _reserve(received_training_id: int):
     """Used for annotating endpoint functions. This method ensures error handling
     and guarantees that all returns are of the format
     {
         "data": whatever or null if error,
         "error-message": str or null if no error
     }"""
-
-    @functools.wraps(fun)
-    def fun_wrapper():
-        if remote_addr is not None and request.remote_addr != remote_addr:
-            raise IOError("Client is already reserved for training")
-        return fun()
-
-    return fun_wrapper
+    global training_id
+    if training_id is not None and received_training_id != training_id:
+        raise IOError("Client is already reserved for training")
 
 @client.get("/ping")
 @_endpoint
@@ -150,26 +145,18 @@ def command():
                 f"stderr: {p.stderr.read().decode('utf-8')}"
             )
 
-@client.get("/configure")
-@_endpoint
-def configure():
-    num = int(request.args.get("num"))
-    set_hostname(f"SSR{num}")
-    # set_static_ip(f"192.168.0.{200+num}")
-    _delayed_reboot()
-
 @client.post("/configure-training")
 @_endpoint
-@_reserve
 def configure_training():
-    global remote_addr, trainer
+    global training_id, trainer
     start_args = _get_post_data()
+    received_training_id = start_args.pop("training_id")
+    _reserve(received_training_id)
+    training_id = received_training_id
     trainer = ClientTrainer(**start_args, data_path=os.path.abspath(os.path.join(__file__, "..", "..", "data")))
-    remote_addr = request.remote_addr
 
 @client.post("/train-round")
 @_endpoint
-@_reserve
 def train_round() -> str:
     """ Performs a training round. Expects a json of
     {
@@ -179,6 +166,7 @@ def train_round() -> str:
     } """
     global trainer
     args = _get_post_data()
+    _reserve(args.pop("training_id"))
     timings = dict()
     tt = TickTock()
 
@@ -202,10 +190,14 @@ def train_round() -> str:
 @client.get("/end-training")
 @_endpoint
 def end_training():
-    global remote_addr, trainer
-    remote_addr = None
+    global training_id, trainer
+    # Try to force garbage collection
+    del training_id, trainer
+    training_id = None
     trainer = None
-
+    if is_rpi():
+        # Prevent memory from piling up, as it is not properly cleared
+        _delayed_reboot()
 
 if __name__ == "__main__":
     hostname = socket.gethostname()

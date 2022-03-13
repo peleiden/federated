@@ -8,7 +8,7 @@ from pelutils import log
 from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist, get_cifar10
 from src.models.architectures.conv import SimpleConv
 
-LOG_INTERVAL = 100
+LOG_INTERVAL = 1
 
 
 def epoch(

@@ -12,9 +12,9 @@ training:
   clients: 10
   communication_rounds: 5
   local_epochs: 2
-  clients_per_round: 5
+  clients_per_round: 1
   local_data_amount: 1000
-  batch_size: 64
+  batch_size: 48
   lr: 0.001
   seed: 42
   dataset: cifar10
