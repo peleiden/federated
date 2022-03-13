@@ -60,7 +60,7 @@ def run_local_rounds(clients: tuple[ClientTrainer], client_args: list) -> Genera
     for i, args in enumerate(client_args):
         yield clients[i].run_round(**args)
 
-def setup_external_clients(ip: str, start_args: dict, num_devices: int) -> list[float]:
+def setup_external_clients(ip: str, start_args: dict, num_devices: int, training_id: int) -> list[float]:
     telemetries = [None] * num_devices
     def setup_single_client(num: int):
         log("Requesting initial telemetry from device %i" % num)
@@ -73,6 +73,7 @@ def setup_external_clients(ip: str, start_args: dict, num_devices: int) -> list[
         response = requests.post(f"http://{ip}:{3080+num}/configure-training", json=dict(
             train_cfg=dict(start_args["train_cfg"]),
             model_cfg=dict(start_args["model_cfg"]),
+            training_id = training_id,
         ))
         log("Got status code %i" % response.status_code)
         log(response.content)
@@ -88,13 +89,14 @@ def setup_external_clients(ip: str, start_args: dict, num_devices: int) -> list[
 
     return telemetries
 
-def run_external_rounds(ip: str, client_args: list) -> Generator[tuple[OrderedDict, dict[str, float]], None, None]:
+def run_external_rounds(ip: str, client_args: list, training_id: int) -> Generator[tuple[OrderedDict, dict[str, float]], None, None]:
     returned_b64s: list[str] = [None] * len(client_args)
     returned_timings: list[dict[str, float]] = [None] * len(client_args)
 
     def train_single_client(num: int, args: dict):
         args = args.copy()
         args["state_dict"] = state_dict_to_base64(args["state_dict"])
+        args["training_id"] = training_id
         log("Sending state dict to device %i" % num)
         tt = TickTock()
         tt.tick()
@@ -153,7 +155,9 @@ def main(cfg: dict):
     if ip:
         log("Using clients at IP %s" % ip)
         timestamp = time.time()
-        telemetry_readings = setup_external_clients(ip, start_args, server.train_cfg.clients_per_round)
+        training_id = hash(timestamp)
+        log("Training ID: %i" % training_id)
+        telemetry_readings = setup_external_clients(ip, start_args, server.train_cfg.clients_per_round, training_id)
         for device_id in range(server.train_cfg.clients_per_round):
             results.telemetry.append({
                 "timestamp": [timestamp],
@@ -171,7 +175,7 @@ def main(cfg: dict):
         log.section(f"Round {i}. Chose clients with idx", list(c["idx"] for c in client_args))
 
         if ip:
-            received_data, timings = zip(*run_external_rounds(ip, client_args))
+            received_data, timings = zip(*run_external_rounds(ip, client_args, training_id))
         else:
             received_data = list(run_local_rounds(clients, client_args))
         server.aggregate(received_data)
