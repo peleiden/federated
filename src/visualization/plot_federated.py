@@ -33,7 +33,7 @@ def plot_timeline():
             plt.plot(
                 np.array(tel["timestamp"])-start_time,
                 tel["memory_usage"],
-                c="gray" if i > 0 else "blue",
+                c="gray",
                 alpha=0.5,
                 label="Memory usage" if i == 0 else None,
             )

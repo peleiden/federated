@@ -72,15 +72,7 @@ def setup_external_clients(ip: str, start_args: dict, num_devices: int, training
     telemetries = [None] * num_devices
 
     def setup_single_client(num: int):
-        log("Requesting initial telemetry from device %i" % num)
-        response = requests.get(f"http://{ip}:{3080+num}/telemetry")
-        if response.status_code != 200:
-            raise IOError("Device %i returned status code %i" % (num, response.status_code))
-        telemetries[num] = json.loads(response.content)["data"]
-        log("Device %i reported %.2f %% memory usage" % (num, json.loads(response.content)["data"]["total-memory-usage-pct"]))
-
         log("Sending training configuration to device %i" % num)
-
         response = requests.post(f"http://{ip}:{3080+num}/configure-training", json=dict(
             train_cfg=dict(start_args["train_cfg"]),
             model_cfg=dict(start_args["model_cfg"]),
@@ -143,6 +135,23 @@ def ping_telemetry(ip: str, num_clients: int, results: Results):
         log.debug("Device %i reported %.2f %% memory usage" % (current_client, results.telemetry[current_client]["memory_usage"][-1]))
         current_client = (current_client + 1) % num_clients
 
+def reset_all_devices(ip: Optional[str], num_clients: int):
+    if not ip:
+        return
+
+    def reset_device(num: int):
+        response = requests.get(f"http://{ip}:{3080+num}/end-training")
+        if response.status_code != 200:
+            raise IOError("Device %i returned status code %i" % (num, response.status_code))
+        log("Reset device %i" % num)
+
+    threads = list()
+    for i in range(num_clients):
+        threads.append(Thread(target=lambda: reset_device(i)))
+        threads[-1].start()
+    for i in range(num_clients):
+        threads[i].join()
+
 @hydra.main(config_name="config.yaml", config_path=".")
 def main(cfg: dict):
     global _ping_telemetry
@@ -164,7 +173,7 @@ def main(cfg: dict):
         cfg             = cfg,
         start_args      = start_args,
         timings         = list(),
-        telemetry       = list(),
+        telemetry       = [{"timestamp": list(), "memory_usage": list()} for _ in range(server.train_cfg.clients_per_round)],
         eval_timestamps = list(),
         test_accuracies = list(),
         test_losses     = list(),
@@ -177,14 +186,9 @@ def main(cfg: dict):
         timestamp = time.time()
         training_id = hash(timestamp)
         log("Training ID: %i" % training_id)
-        telemetry_readings = setup_external_clients(ip, start_args, server.train_cfg.clients_per_round, training_id)
-        for device_id in range(server.train_cfg.clients_per_round):
-            results.telemetry.append({
-                "timestamp": [timestamp],
-                "memory_usage": [telemetry_readings[device_id]["total-memory-usage-pct"]]
-            })
         telemetry_thread = Thread(target=lambda: ping_telemetry(ip, server.train_cfg.clients_per_round, results))
         telemetry_thread.start()
+        setup_external_clients(ip, start_args, server.train_cfg.clients_per_round, training_id)
     else:
         log("Using local training")
         clients = setup_local_clients(start_args, server.train_cfg.clients)
@@ -233,8 +237,11 @@ def main(cfg: dict):
     _ping_telemetry = False
     if ip:
         telemetry_thread.join()
+    # Reset all devices, so they are ready for another training
+    log.section("Resetting devices")
+    reset_all_devices(ip, server.train_cfg.clients_per_round)
 
-    log("Saving results")
+    log.section("Saving results")
     results.save()
     # Make json files readable
     with open(results.json_name) as f:
