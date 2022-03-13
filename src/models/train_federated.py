@@ -250,7 +250,7 @@ if __name__ == "__main__":
         log.info(".env file found")
     else:
         log.info(".env file not found")
-    main()
+
     try:
         main()
     except:
