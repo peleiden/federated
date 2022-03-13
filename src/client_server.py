@@ -191,6 +191,8 @@ def train_round() -> str:
 @_endpoint
 def end_training():
     global training_id, trainer
+    # Force garbage collection
+    del training_id, trainer
     training_id = None
     trainer = None
 

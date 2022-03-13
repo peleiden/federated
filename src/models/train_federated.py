@@ -212,4 +212,8 @@ def main(cfg: dict):
 
 if __name__ == "__main__":
     log.configure("training.log", print_level=Levels.DEBUG)  # Hydra controls cwd
-    main()
+    try:
+        main()
+    except:
+        # Stop telemetry pinging if something goes wrong
+        _ping_telemetry = False
