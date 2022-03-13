@@ -39,7 +39,7 @@ def _delayed_reboot(seconds=1):
         log(f"Rebooting in {seconds} seconds")
         time.sleep(seconds)
         log("Rebooting now")
-        os.system("reboot")
+        os.system("sudo reboot")
 
     t = Thread(target=reboot)
     t.start()
