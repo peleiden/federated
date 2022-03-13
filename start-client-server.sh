@@ -2,4 +2,4 @@
 # Otherwise, use make start-server
 cd "$(dirname "$0")"
 
-sudo python3 src/client_server.py
+python src/client_server.py
