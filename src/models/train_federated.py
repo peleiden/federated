@@ -1,14 +1,17 @@
 from __future__ import annotations
+
+import json
+import os
 from dataclasses import dataclass
 from threading import Thread
 from typing import Generator, Optional, OrderedDict
-import json
-import os
 
-from pelutils import log, TickTock, DataStorage, Levels
 import hydra
 import requests
+from dotenv import load_dotenv
+from pelutils import DataStorage, Levels, TickTock, log
 
+import wandb
 from src.client_utils import state_dict_from_base64, state_dict_to_base64
 from src.models.client_train import ClientTrainer
 from src.models.server_train import ServerTrainer
@@ -22,15 +25,15 @@ class Results(DataStorage):
     start_args: dict
     # List of timings for each round
     # [
-        # {
-            # total_train: float,  # Total training time for this round
-            # total_test: float,  # Part of round spent evaluating
-            # The following are per device. They are empty if ip is None
-            # response_time: list[float],  # Time from request is sent until return
-            # decode: list[float],  # Time spent decoding state dict
-            # train:  list[float],  # Time spent training
-            # encode: list[float],  # Time spent encoding state dict
-        # }
+    # {
+    # total_train: float,  # Total training time for this round
+    # total_test: float,  # Part of round spent evaluating
+    # The following are per device. They are empty if ip is None
+    # response_time: list[float],  # Time from request is sent until return
+    # decode: list[float],  # Time spent decoding state dict
+    # train:  list[float],  # Time spent training
+    # encode: list[float],  # Time spent encoding state dict
+    # }
     # ]
     timings: list[dict[str, float | list[float]]]
     # Array of accuracies after each round
@@ -41,24 +44,34 @@ class Results(DataStorage):
 
     json_name = "results.json"
 
+
 def setup_local_clients(start_args: dict, num_clients: int) -> tuple[ClientTrainer]:
     return tuple(ClientTrainer(**start_args) for _ in range(num_clients))
 
-def run_local_rounds(clients: tuple[ClientTrainer], client_args: list) -> Generator[OrderedDict, None, None]:
+
+def run_local_rounds(
+    clients: tuple[ClientTrainer], client_args: list
+) -> Generator[OrderedDict, None, None]:
     for i, args in enumerate(client_args):
         yield clients[i].run_round(**args)
+
 
 def setup_external_clients(ip: str, start_args: dict, num_devices: int):
     def setup_single_client(num: int):
         log("Sending training configuration to device %i" % num)
-        response = requests.post(f"http://{ip}:{3080+num}/configure-training", json=dict(
-            train_cfg=dict(start_args["train_cfg"]),
-            model_cfg=dict(start_args["model_cfg"]),
-        ))
+        response = requests.post(
+            f"http://{ip}:{3080+num}/configure-training",
+            json=dict(
+                train_cfg=dict(start_args["train_cfg"]),
+                model_cfg=dict(start_args["model_cfg"]),
+            ),
+        )
         log("Got status code %i" % response.status_code)
         log(response.content)
         if response.status_code != 200:
-            raise IOError("Device %i returned status code %i" % (num, response.status_code))
+            raise IOError(
+                "Device %i returned status code %i" % (num, response.status_code)
+            )
 
     threads = list()
     for i in range(num_devices):
@@ -67,7 +80,10 @@ def setup_external_clients(ip: str, start_args: dict, num_devices: int):
     for i in range(num_devices):
         threads[i].join()
 
-def run_external_rounds(ip: str, client_args: list) -> Generator[tuple[OrderedDict, dict[str, float]], None, None]:
+
+def run_external_rounds(
+    ip: str, client_args: list
+) -> Generator[tuple[OrderedDict, dict[str, float]], None, None]:
     returned_b64s: list[str] = [None] * len(client_args)
     returned_timings: list[dict[str, float]] = [None] * len(client_args)
 
@@ -81,7 +97,9 @@ def run_external_rounds(ip: str, client_args: list) -> Generator[tuple[OrderedDi
         response_time = tt.tock()
         log("Got status code %i from device %i" % (response.status_code, num))
         if response.status_code != 200:
-            raise IOError("Device %i returned status code %i" % (num, response.status_code))
+            raise IOError(
+                "Device %i returned status code %i" % (num, response.status_code)
+            )
         response = json.loads(response.content)
         returned_b64s[num] = response["data"]["state_dict"]
         returned_timings[num] = response["data"]["timings"]
@@ -95,10 +113,18 @@ def run_external_rounds(ip: str, client_args: list) -> Generator[tuple[OrderedDi
         threads[i].join()
         yield state_dict_from_base64(returned_b64s[i]), returned_timings[i]
 
+
 @hydra.main(config_name="config.yaml", config_path=".")
 def main(cfg: dict):
     server = ServerTrainer(cfg)
     start_args = server.get_client_start_args()
+
+    entity = os.getenv("WANDB_ENTITY")
+    project = "federated"
+    name = cfg.configs.name if "name" in cfg.configs.keys() else "Name not defined"
+    # Expects a token in envs called WANDB_API_KEY.
+    # This key should match the owner of the key.
+    wandb.init(project=project, entity=entity, name=name)
 
     tt = TickTock()
 
@@ -111,18 +137,20 @@ def main(cfg: dict):
         clients = setup_local_clients(start_args, server.train_cfg.clients)
 
     results = Results(
-        cfg             = cfg,
-        start_args      = start_args,
-        timings         = list(),
-        test_accuracies = list(),
-        test_losses     = list(),
-        ip              = ip,
+        cfg=cfg,
+        start_args=start_args,
+        timings=list(),
+        test_accuracies=list(),
+        test_losses=list(),
+        ip=ip,
     )
 
     for i in range(cfg.configs.training.communication_rounds):
         tt.tick()
         client_args = server.get_communication_round_args()
-        log.section(f"Round {i}. Chose clients with idx", list(c["idx"] for c in client_args))
+        log.section(
+            f"Round {i}. Chose clients with idx", list(c["idx"] for c in client_args)
+        )
 
         if ip:
             received_data, timings = zip(*run_external_rounds(ip, client_args))
@@ -132,18 +160,28 @@ def main(cfg: dict):
         train_time = tt.tock()
 
         tt.tick()
-        acc, loss = evaluate(server.model, server.device, server.test_dataloader, server.criterion)
+        acc, loss = evaluate(
+            server.model,
+            server.device,
+            server.test_dataloader,
+            server.criterion,
+            use_wandb=True,
+        )
         test_time = tt.tock()
 
         results.test_accuracies.append(float(acc))
         results.test_losses.append(float(loss))
-        results.timings.append(dict(
-            total_train = train_time,
-            total_test  = test_time,
-        ))
+        results.timings.append(
+            dict(
+                total_train=train_time,
+                total_test=test_time,
+            )
+        )
         for device_timing_key in "response_time", "decode", "train", "encode":
             if ip:
-                results.timings[-1][device_timing_key] = [t[device_timing_key] for t in timings]
+                results.timings[-1][device_timing_key] = [
+                    t[device_timing_key] for t in timings
+                ]
             else:
                 results.timings[-1][device_timing_key] = list()
 
@@ -155,6 +193,12 @@ def main(cfg: dict):
     with open(results.json_name, "w") as f:
         json.dump(res, f, indent=4)
 
+
 if __name__ == "__main__":
+    # Loads .env file, if in same folder as
     log.configure("training.log", print_level=Levels.DEBUG)  # Hydra controls cwd
+    if load_dotenv():
+        log.info(".env file found")
+    else:
+        log.info(".env file not found")
     main()
