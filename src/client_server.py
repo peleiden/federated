@@ -21,7 +21,7 @@ from pelutils import get_repo, log, TickTock, Levels
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.client_utils import get_ip, state_dict_from_base64, state_dict_to_base64
+from src.client_utils import get_ip, state_dict_from_base64, state_dict_to_base64, is_rpi
 from src.models.client_train import ClientTrainer
 
 # Create client server
@@ -191,11 +191,13 @@ def train_round() -> str:
 @_endpoint
 def end_training():
     global training_id, trainer
-    # Force garbage collection
+    # Try to force garbage collection
     del training_id, trainer
     training_id = None
     trainer = None
-
+    if is_rpi():
+        # Prevent memory from piling up, as it is not properly cleared
+        _delayed_reboot()
 
 if __name__ == "__main__":
     hostname = socket.gethostname()

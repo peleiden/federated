@@ -1,5 +1,6 @@
 import base64
 import io
+import platform
 import socket
 from collections import OrderedDict
 
@@ -28,3 +29,10 @@ def state_dict_to_base64(state_dict: OrderedDict) -> str:
 def state_dict_from_base64(b64: str) -> OrderedDict:
     buffer = io.BytesIO(base64.b64decode(b64))
     return torch.load(buffer)
+
+def is_rpi() -> bool:
+    """ I'd just like to interject for a moment. What you're refering to as Linux, is in fact, GNU/Linux,
+    or as I've recently taken to calling it, GNU plus Linux. Linux is not an operating system unto itself,
+    but rather another free component of a fully functioning GNU system made useful by the GNU corelibs,
+    shell utilities and vital system components comprising a full OS as defined by POSIX. """
+    return all(kw in platform.platform() for kw in ("Linux", "aarch"))
