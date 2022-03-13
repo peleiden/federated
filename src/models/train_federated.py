@@ -77,6 +77,7 @@ def setup_external_clients(ip: str, start_args: dict, num_devices: int, training
         if response.status_code != 200:
             raise IOError("Device %i returned status code %i" % (num, response.status_code))
         telemetries[num] = json.loads(response.content)["data"]
+        log("Device %i reported %.2f %% memory usage" % (num, json.loads(response.content)["data"]["total-memory-usage-pct"]))
 
         log("Sending training configuration to device %i" % num)
 
@@ -85,8 +86,7 @@ def setup_external_clients(ip: str, start_args: dict, num_devices: int, training
             model_cfg=dict(start_args["model_cfg"]),
             training_id = training_id,
         ))
-        log("Got status code %i" % response.status_code)
-        log(response.content)
+        log.debug("Got status code %i" % response.status_code, response.content.decode("utf-8").strip())
         if response.status_code != 200:
             raise IOError(
                 "Device %i returned status code %i" % (num, response.status_code)
@@ -107,7 +107,7 @@ def run_external_rounds(ip: str, client_args: list, training_id: int) -> Generat
         args = args.copy()
         args["state_dict"] = state_dict_to_base64(args["state_dict"])
         args["training_id"] = training_id
-        log("Sending state dict to device %i" % num)
+        log("Sending state dict to device %i along with %i data indices" % (num, len(args["split"])))
         tt = TickTock()
         tt.tick()
         response = requests.post(f"http://{ip}:{3080+num}/train-round", json=args)
@@ -171,6 +171,7 @@ def main(cfg: dict):
         ip              = ip,
     )
 
+    log.section("Setting up clients")
     if ip:
         log("Using clients at IP %s" % ip)
         timestamp = time.time()
@@ -244,7 +245,7 @@ def main(cfg: dict):
 
 if __name__ == "__main__":
     # Loads .env file, if in same folder as
-    log.configure("training.log", print_level=Levels.DEBUG)  # Hydra controls cwd
+    log.configure("training.log")  # Hydra controls cwd
     if load_dotenv():
         log.info(".env file found")
     else:
