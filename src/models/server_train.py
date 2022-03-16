@@ -6,7 +6,7 @@ from pelutils import log
 from torch.functional import Tensor
 
 from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist, get_cifar10
-from src.data.split_dataset import DirichiletUnbalanced, EqualIIDSplit
+from src.data.split_dataset import DirichletUnbalanced, EqualIIDSplit
 from src.models.architectures.conv import SimpleConv
 
 
@@ -31,7 +31,7 @@ class ServerTrainer:
         ).to(self.device)
         self.criterion = torch.nn.CrossEntropyLoss()
 
-        splitter = DirichiletUnbalanced(self.train_cfg["alpha"]) if self.train_cfg["split"] == "dirichilet" else EqualIIDSplit()
+        splitter = DirichletUnbalanced(self.train_cfg["alpha"]) if self.train_cfg["split"] == "dirichlet" else EqualIIDSplit()
         self.splits = splitter.split(
             self.train_cfg.clients,
             self.train_cfg.local_data_amount,
