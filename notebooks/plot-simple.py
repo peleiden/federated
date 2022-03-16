@@ -67,9 +67,24 @@ fig, ax = plt.subplots(figsize=figsize_std)
 ax.set_title("CIFAR10: Performance over data imbalance")
 ax.set_ylabel("Accuracy on 10K test images [%] over 3 runs")
 ax.set_xlabel("Dirichlet class balance parameter $\\alpha$")
-ax.semilogx(alphas, final_accuracies.mean(0),  "o-", color=tab_colours[3], lw=2, ms=10, label="Mean FedAvg w/ 1000 obs. per device, 5 dev. sampled, 5 rounds")
+ax.semilogx(alphas, final_accuracies.mean(0),  "o-", color=tab_colours[3], lw=2, ms=10, label="Mean FedAvg w/ 1000 obs. per device, 5/10 dev. sampled, 5 rounds")
 ax.semilogx(alphas, final_accuracies.max(0),  "o--", color="black", lw=1, ms=5, label="Best and worst FedAvg")
 ax.semilogx(alphas, final_accuracies.min(0),  "o--", color="black", lw=1, ms=5)
 ax.legend()
 ax.grid()
 fig.savefig("reports/imgs/dirichlet.pdf")
+
+# %%
+gammas = [1, 0.9, 0.5, 0.1]
+final_accuracies = np.array(
+    [57.50, 54.11, 37.89, 25.60],
+)
+fig, ax = plt.subplots(figsize=figsize_std)
+
+ax.set_title("CIFAR10: Performance over learning rate scheduling")
+ax.set_ylabel("Accuracy on 10K test images [%]")
+ax.set_xlabel("Learning rate scheduler multiplicative factor $\\gamma$ at learning rate 0.001")
+ax.plot(gammas, final_accuracies,  "o-", color=tab_colours[4], lw=2, ms=10, label="FedAvg w/ 1000 obs. per device, 5/10 dev. sampled, 10 rounds")
+ax.legend()
+ax.grid()
+fig.savefig("reports/imgs/lr-schedule.pdf")

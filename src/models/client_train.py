@@ -32,6 +32,7 @@ class ClientTrainer:
         ).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.train_cfg["lr"])
         self.criterion = torch.nn.CrossEntropyLoss()
+        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=1, gamma=self.train_cfg["lr_gamma"])
 
     def run_round(
         self,
@@ -58,4 +59,5 @@ class ClientTrainer:
                 self.criterion,
                 i + 1,
             )
+            self.scheduler.step()
         return self.model.state_dict()

@@ -15,6 +15,7 @@ training:
   clients_per_round: 10
   local_data_amount: 1000
   batch_size: 48
+  lr_gamma: 1
   lr: 0.001
   seed: 42
   dataset: cifar10
