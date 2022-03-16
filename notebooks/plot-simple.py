@@ -33,12 +33,12 @@ ax.grid()
 fig.savefig("reports/imgs/scaling-clients.pdf")
 
 # %%
-epochs = [1, 2, 5, 10]
+epochs = [1, 2, 5, 10, 15, 20]
 final_accuracies = np.array(
 [
-    [46.08, 50.78, 56.32, 56.87],
-    [46.07, 52.39, 55.96, 55.52],
-    [45.47, 52.28, 57.22, 58.10],
+    [46.08, 50.78, 56.32, 56.87, 56.62, 57.82],
+    [46.07, 52.39, 55.96, 55.52, 57.22, 58.26],
+    [45.47, 52.28, 57.22, 58.10, 57.04, 56.89],
 ]
 )
 fig, ax = plt.subplots(figsize=figsize_std)
@@ -46,7 +46,7 @@ fig, ax = plt.subplots(figsize=figsize_std)
 ax.set_title("CIFAR10: Scaling number of local epochs")
 ax.set_ylabel("Accuracy on 10K test images [%] over 3 runs")
 ax.set_xlabel("Number of local epochs performed on each device")
-ax.plot(epochs, final_accuracies.mean(0),  "o-", color=tab_colours[2], lw=2, ms=10, label="Mean FedAvg w/ 1000 obs. per device, 5 dev. sampled, 5 rounds")
+ax.plot(epochs, final_accuracies.mean(0),  "o-", color=tab_colours[2], lw=2, ms=10, label="Mean FedAvg w/ 1000 obs. per device, 5/10 dev. sampled, 5 rounds")
 ax.plot(epochs, final_accuracies.max(0),  "o--", color="black", lw=1, ms=5, label="Best and worst FedAvg")
 ax.plot(epochs, final_accuracies.min(0),  "o--", color="black", lw=1, ms=5)
 ax.legend()
