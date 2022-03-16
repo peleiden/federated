@@ -8,6 +8,7 @@ wandb==0.12.10
 pelutils==0.6.9
 psutil==5.9.0
 requests==2.27.1
+python-dotenv==0.19.2
 
 # Server stuff
 Flask==2.0.1
