@@ -1,0 +1,22 @@
+
+name: "Loss test"
+
+model:
+  channels_1: 32
+  channels_2: 64
+  kernel: 3
+  maxpool_kernel: 2
+  linear_hidden: 128
+  dropout_1: 0.25
+  dropout_2: 0.5
+
+training:
+  clients: 10
+  communication_rounds: 5
+  local_epochs: 2
+  clients_per_round: 5
+  local_data_amount: 1000
+  batch_size: 48
+  lr: 0.001
+  seed: 42
+  dataset: cifar10
