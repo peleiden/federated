@@ -194,7 +194,7 @@ def main(cfg: dict):
     name = cfg.configs.name if "name" in cfg.configs.keys() else "Name not defined"
     # Expects a token in envs called WANDB_API_KEY.
     # This key should match the owner of the key.
-    wandb.init(project=project, entity=entity, name=name)
+    wandb.init(project=project, entity=entity, name=name, config={**cfg.configs})
 
     tt = TickTock()
 
@@ -285,6 +285,21 @@ def main(cfg: dict):
     log("Resetting devices")
     reset_all_devices(ip, server.train_cfg.clients_per_round)
 
+    # ------- WANDB CORNER ------- #
+    # Bar chart showing how many clients, and how many sampled
+    data = [
+        ["Clients", cfg.configs.training.clients], 
+        ["Sampled", cfg.configs.training.clients_per_round]]
+    table = wandb.Table(data=data, columns=["label", "value"])
+    wandb.log({"com_chart_id": wandb.plot.bar(table, "label", "value", title="Number of devices and sampled devices-------")})
+    
+    # Line chart showing the loss for each client per comm_round
+    # TODO
+    # Need to retrieve more info from clients,
+    # right now only have overall score, need per comm_round
+
+    # ------- WANDB CORNER OUT ------- # 
+    log.debug("Creating WandB charts")
     log("Saving results")
     results.save()
     # Make json files readable

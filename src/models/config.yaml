@@ -1,2 +1,2 @@
 defaults:
-  - configs: exp2
+  - configs: loss_exp

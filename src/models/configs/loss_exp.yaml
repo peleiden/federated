@@ -1,4 +1,3 @@
-
 name: "Loss test"
 
 model:
@@ -15,8 +14,11 @@ training:
   communication_rounds: 5
   local_epochs: 2
   clients_per_round: 5
-  local_data_amount: 1000
+  local_data_amount: 288
   batch_size: 48
+  lr_gamma: 1
   lr: 0.001
   seed: 42
   dataset: cifar10
+  split: iid
+  alpha: 1
