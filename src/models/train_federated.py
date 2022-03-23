@@ -293,6 +293,9 @@ def main(cfg: dict):
     with open(results.json_name, "w") as f:
         json.dump(res, f, indent=4)
 
+    # Stop wandb so multirun does not fail
+    wandb.finish()
+
     # Give devices time to shutdown before next round
     time.sleep(5)
 
