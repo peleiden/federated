@@ -19,5 +19,5 @@ training:
   lr: 0.001
   seed: 42
   dataset: cifar10
-  split: iid
-  alpha: 1
+  split: dirichlet
+  alpha: 0.1
