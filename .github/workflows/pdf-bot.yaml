@@ -20,7 +20,8 @@ jobs:
       - name: compile ma boi
         uses: xu-cheng/latex-action@v2
         with:
-          root_file: reports/report.tex
+          working_directory: reports
+          root_file: report.tex
       - name: generate ma boi
         run: |
           mkdir public
