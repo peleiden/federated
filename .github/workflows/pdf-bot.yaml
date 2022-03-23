@@ -1,0 +1,55 @@
+# Pdf builder
+# See: https://github.com/marketplace/actions/github-action-for-latex and
+# https://github.com/marketplace/actions/github-pages
+name: pdf-bot
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - reports/*
+      - .github/workflows/pdf-bot.yaml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: pull ma boi
+        uses: actions/checkout@v2
+      - name: compile ma boi
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: reports/report.tex
+      - name: generate ma boi
+        run: |
+          mkdir public
+          mv reports/report.pdf public/report.pdf
+          cat > public/index.html <<EOL
+          <!doctype html>
+            <html>
+              <head>
+                <title>Compilation ${{github.run_number}}</title>
+              </head>
+              <body>
+                <p>
+                  <a href="https://peleiden.github.io/federated/report.pdf">
+                    Compilation ${{ github.run_number }}
+                  </a>
+                </p>
+                <p>
+                  <a href="https://github.com/peleiden/federated/blob/gh-pages/report.pdf">
+                     Direct link to GitHub blob of newest pdf
+                  </a>
+                </p>
+              </body>
+            </html>
+          EOL
+      - name: deploy ma boi
+        if: success()
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          target_branch: gh-pages
+          build_dir: public
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
