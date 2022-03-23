@@ -40,7 +40,7 @@ def get_mnist(
 
 
 def get_cifar10(
-    data_folder: str, train: bool = True, download: bool = False
+    data_folder: str, train: bool = True, download: bool = False, cifar100: bool = False
 ) -> VisionDataset:
     # Params taken from https://github.com/kuangliu/pytorch-cifar/blob/master/main.py
     transform = transforms.Compose(
@@ -51,7 +51,8 @@ def get_cifar10(
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ]
     )
-    dataset = datasets.CIFAR10(
+    dataset_cls = datasets.CIFAR100 if cifar100 else datasets.CIFAR10
+    dataset = dataset_cls(
         data_folder, train=train, download=download, transform=transform
     )
     return dataset
@@ -60,8 +61,13 @@ def get_cifar10(
 if __name__ == "__main__":
     # Call this once to download to disk
     print("Downloading data to disk if not already there ...")
+    # MNIST
     get_mnist(DATA_PATH, train=True, download=True)
     get_mnist(DATA_PATH, train=False, download=True)
+    # CIFAR-10
     get_cifar10(DATA_PATH, train=True, download=True)
     get_cifar10(DATA_PATH, train=False, download=True)
+    # CIFAR-100
+    get_cifar10(DATA_PATH, train=True, download=True, cifar100=True)
+    get_cifar10(DATA_PATH, train=False, download=True, cifar100=True)
     print("Done.")

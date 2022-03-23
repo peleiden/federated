@@ -9,15 +9,29 @@ model:
   dropout_2: 0.5
 
 training:
+  # Core algoritmic settings
+  aggregation: fedavg
   clients: 100
   communication_rounds: 5
   local_epochs: 2
   clients_per_round: 2
   local_data_amount: 288
+
+  # Optimisation arguments
   batch_size: 48
   lr_gamma: 1
   lr: 0.001
-  seed: 42
+
+  # Dataset settings
   dataset: cifar10
   split: dirichlet
   alpha: 0.1
+
+  # Extra arguments
+  seed: 42
+
+  # FedDF parameters
+  distil:
+    steps: 10000
+    lr: 0.001
+    batch_size: 128
