@@ -73,7 +73,7 @@ def run_local_rounds(
     for i, args in enumerate(client_args):
         yield clients[i].run_round(**args)
 
-def connect_devices(ip: str, num_devices: int):
+def connect_devices(ips: list[str], num_devices: int):
     """ Ensure that all devices respond. Two minute response time is allowed,
     as devices restart between sessions. """
     timer = TickTock()
@@ -83,7 +83,7 @@ def connect_devices(ip: str, num_devices: int):
         log("Connecting to device %i" % num)
         while timer.tock() < _timeout:
             try:
-                response = requests.get(f"http://{ip}:{3080+num}/ping")
+                response = requests.get(f"http://{ips[num]}:{3080+num}/ping")
                 log.debug("Got status code %i from device %i" % (response.status_code, num))
                 if response.status_code != 200:
                     raise IOError(
@@ -100,14 +100,14 @@ def connect_devices(ip: str, num_devices: int):
     for i in range(num_devices):
         threads[i].join()
 
-def setup_external_clients(ip: str, start_args: dict, num_devices: int, training_id: int) -> list[float]:
+def setup_external_clients(ips: list[str], start_args: dict, num_devices: int, training_id: int) -> list[float]:
 
     def setup_single_client(num: int):
         log("Sending training configuration to device %i" % num)
-        response = requests.post(f"http://{ip}:{3080+num}/configure-training", json=dict(
+        response = requests.post(f"http://{ips[num]}:{3080+num}/configure-training", json=dict(
             train_cfg=dict(start_args["train_cfg"]),
             model_cfg=dict(start_args["model_cfg"]),
-            training_id = training_id,
+            training_id=training_id,
         ))
         if response.status_code != 200:
             raise IOError(
@@ -122,7 +122,7 @@ def setup_external_clients(ip: str, start_args: dict, num_devices: int, training
     for i in range(num_devices):
         threads[i].join()
 
-def run_external_rounds(ip: str, client_args: list, training_id: int) -> Generator[tuple[OrderedDict, dict[str, float]], None, None]:
+def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> Generator[tuple[OrderedDict, dict[str, float]], None, None]:
     returned_b64s: list[str] = [None] * len(client_args)
     returned_timings: list[dict[str, float]] = [None] * len(client_args)
 
@@ -133,7 +133,7 @@ def run_external_rounds(ip: str, client_args: list, training_id: int) -> Generat
         log("Sending state dict to device %i along with %i data indices" % (num, len(args["split"])))
         tt = TickTock()
         tt.tick()
-        response = requests.post(f"http://{ip}:{3080+num}/train-round", json=args)
+        response = requests.post(f"http://{ips[num]}:{3080+num}/train-round", json=args)
         response_time = tt.tock()
         if response.status_code != 200:
             raise IOError(
@@ -153,25 +153,26 @@ def run_external_rounds(ip: str, client_args: list, training_id: int) -> Generat
         threads[i].join()
         yield state_dict_from_base64(returned_b64s[i]), returned_timings[i]
 
-def ping_telemetry(ip: str, num_clients: int, results: Results):
+def ping_telemetry(ips: list[str], num_clients: int, results: Results):
     global _ping_telemetry
     current_client = 0
     while _ping_telemetry:
         log.debug("Requesting telemetry from client %i" % current_client)
-        response = requests.get(f"http://{ip}:{3080+current_client}/telemetry")
+        response = requests.get(f"http://{ips[current_client]}:{3080+current_client}/telemetry")
         if response.status_code != 200:
             raise IOError("Device %i returned status code %i" % (current_client, response.status_code))
         results.telemetry[current_client]["timestamp"].append(time.time())
         results.telemetry[current_client]["memory_usage"].append(json.loads(response.content)["data"]["total-memory-usage-pct"])
         log.debug("Device %i reported %.2f %% memory usage" % (current_client, results.telemetry[current_client]["memory_usage"][-1]))
         current_client = (current_client + 1) % num_clients
+        time.sleep(100)
 
-def reset_all_devices(ip: Optional[str], num_clients: int):
-    if not ip:
+def reset_all_devices(ips: list[str], num_clients: int):
+    if not ips:
         return
 
     def reset_device(num: int):
-        response = requests.get(f"http://{ip}:{3080+num}/end-training")
+        response = requests.get(f"http://{ips[num]}:{3080+num}/end-training")
         if response.status_code != 200:
             raise IOError("Device %i returned status code %i" % (num, response.status_code))
         log("Reset device %i" % num)
@@ -186,6 +187,7 @@ def reset_all_devices(ip: Optional[str], num_clients: int):
 @hydra.main(config_name="config.yaml", config_path=".")
 def main(cfg: dict):
     global _ping_telemetry
+    _ping_telemetry = True
     server = ServerTrainer(cfg)
     start_args = server.get_client_start_args()
 
@@ -215,6 +217,13 @@ def main(cfg: dict):
         test_losses       = list(),
         ip                = ip,
     )
+    if ip and ip.endswith("x"):
+        start = int(ip.split(".")[-1][:-1])
+        ips = [".".join(ip.split(".")[:-1]) + ".%i" % (start+i) for i in range(results.clients_per_round)]
+    elif ip:
+        ips = [ip] * results.clients_per_round
+    else:
+        ips = list()
 
     log.section("Setting up clients")
     if ip:
@@ -222,11 +231,11 @@ def main(cfg: dict):
         timestamp = time.time()
         training_id = hash(timestamp)
         log("Training ID: %i" % training_id)
-        connect_devices(ip, server.train_cfg.clients_per_round)
+        connect_devices(ips, server.train_cfg.clients_per_round)
         log("Connected to all devices")
-        telemetry_thread = Thread(target=lambda: ping_telemetry(ip, server.train_cfg.clients_per_round, results))
+        telemetry_thread = Thread(target=lambda: ping_telemetry(ips, server.train_cfg.clients_per_round, results))
         telemetry_thread.start()
-        setup_external_clients(ip, start_args, server.train_cfg.clients_per_round, training_id)
+        setup_external_clients(ips, start_args, server.train_cfg.clients_per_round, training_id)
     else:
         log("Using local training")
         clients = setup_local_clients(start_args, server.train_cfg.clients)
@@ -240,8 +249,8 @@ def main(cfg: dict):
             f"Round {i}. Chose clients with idx", list(c["idx"] for c in client_args)
         )
 
-        if ip:
-            received_data, timings = zip(*run_external_rounds(ip, client_args, training_id))
+        if ips:
+            received_data, timings = zip(*run_external_rounds(ips, client_args, training_id))
         else:
             received_data = list(run_local_rounds(clients, client_args))
         server.aggregate(received_data)
@@ -267,7 +276,7 @@ def main(cfg: dict):
             )
         )
         for device_timing_key in "response_time", "decode", "train", "encode":
-            if ip:
+            if ips:
                 results.timings[-1][device_timing_key] = [
                     t[device_timing_key] for t in timings
                 ]
@@ -279,11 +288,11 @@ def main(cfg: dict):
     log("Images per second: %.2f" % (results.num_images / results.train_time))
 
     _ping_telemetry = False
-    if ip:
+    if ips:
         telemetry_thread.join()
     # Reset all devices, so they are ready for another training
     log("Resetting devices")
-    reset_all_devices(ip, server.train_cfg.clients_per_round)
+    reset_all_devices(ips, server.train_cfg.clients_per_round)
 
     log("Saving results")
     results.save()

@@ -11,6 +11,7 @@ from src.models.architectures.conv import SimpleConv
 LOG_INTERVAL = 1
 
 
+# @profile
 def epoch(
     model: torch.nn.Module,
     device: torch.device,
@@ -48,6 +49,7 @@ def epoch(
                         "loss": mean_loss,
                     }
                 )
+        del output, loss
 
 
 def evaluate(
