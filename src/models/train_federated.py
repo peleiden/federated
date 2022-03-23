@@ -10,6 +10,7 @@ import time
 
 import hydra
 import requests
+from omegaconf.dictconfig import DictConfig
 from dotenv import load_dotenv
 from pelutils import DataStorage, Levels, TickTock, log
 
@@ -63,9 +64,17 @@ class Results(DataStorage):
     json_name = "results.json"
 
 
+def dict_config_to_dict(dc: DictConfig) -> dict:
+    d = dict()
+    for kw, v in dc.items():
+        if isinstance(v, DictConfig):
+            d[kw] = dict_config_to_dict(v)
+        else:
+            d[kw] = v
+    return d
+
 def setup_local_clients(start_args: dict, num_clients: int) -> tuple[ClientTrainer]:
     return tuple(ClientTrainer(**start_args) for _ in range(num_clients))
-
 
 def run_local_rounds(
     clients: tuple[ClientTrainer], client_args: list
@@ -105,8 +114,8 @@ def setup_external_clients(ips: list[str], start_args: dict, num_devices: int, t
     def setup_single_client(num: int):
         log("Sending training configuration to device %i" % num)
         response = requests.post(f"http://{ips[num]}:{3080+num}/configure-training", json=dict(
-            train_cfg=dict(start_args["train_cfg"]),
-            model_cfg=dict(start_args["model_cfg"]),
+            train_cfg=dict_config_to_dict(start_args["train_cfg"]),
+            model_cfg=dict_config_to_dict(start_args["model_cfg"]),
             training_id=training_id,
         ))
         if response.status_code != 200:
