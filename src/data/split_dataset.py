@@ -96,7 +96,7 @@ class DirichletUnbalanced(Splitter):
         splits = [np.concatenate([l[i] for l in label_splits]) for i in range(clients)]
         # Shuffle client arrays
         [np.random.shuffle(s) for s in splits]
-        return {f"dirichlet-sample-{i}": split for i, split in enumerate(splits)}
+        return {f"dirichlet-sample-{i}": split.tolist() for i, split in enumerate(splits)}
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
