@@ -40,6 +40,7 @@ class ClientTrainer:
         idx: int,
         data_key: str,
         split: list[int],
+        noise_std: float,
     ) -> OrderedDict[str, Tensor]:
         """
         Receives model from server, trains it and returns trained version
@@ -58,6 +59,7 @@ class ClientTrainer:
                 self.optimizer,
                 self.criterion,
                 i + 1,
+                noise_std=noise_std,
             )
             self.scheduler.step()
         return self.model.state_dict()

@@ -49,6 +49,10 @@ class ServerTrainer:
             self.distil_criterion = torch.nn.KLDivLoss(reduction="batchmean")
             self.distil_optimizer = torch.optim.Adam(self.model.parameters(), lr=self.train_cfg["distil"]["lr"])
 
+        log("Applying %.4f std noise to %i clients" % (self.train_cfg.noise_std, self.train_cfg.noisy_clients))
+        self.noisy_clients = set(np.random.choice(np.arange(self.train_cfg.clients), size=self.train_cfg.noisy_clients, replace=False))
+        log("The following clients are noisy:", self.noisy_clients, with_info=False)
+
         log("Created server trainer.")
         log(f"{self.model_cfg = }")
         log(f"{self.train_cfg = }")
@@ -78,6 +82,7 @@ class ServerTrainer:
                     idx=int(i),
                     data_key=data_key,
                     split=self.splits[data_key],
+                    noise_std=(i in self.noisy_clients)*self.train_cfg.noise_std,
                 )
             )
         return client_args

@@ -20,10 +20,14 @@ def epoch(
     criterion: torch.nn.Module,
     epoch: int,
     use_wandb: bool = False,
+    noise_std: float = 0,
 ):
     model.train()
     for batch_idx, (data, target) in enumerate(dataloader):
         data, target = data.to(device), target.to(device)
+        data = data.clone()
+        if noise_std > 0:
+            data += noise_std * torch.randn(*data.shape)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
@@ -32,6 +36,7 @@ def epoch(
         if batch_idx % LOG_INTERVAL == 0:
             update = batch_idx * len(data)
             mean_loss = loss.item() / len(data)
+            log.debug("Noise: %.4f std" % noise_std)
             log.debug(
                 "Train Epoch: {} [{}/{} ({:.0f}%)]\tMean loss: {:.4f}".format(
                     epoch,
@@ -104,7 +109,8 @@ def main(cfg: dict):
     test_dataloader = get_dataloader(
         get_data(DATA_PATH, train=False), train_cfg.batch_size
     )
-    image_shape = train_dataloader["dataset"][0][0].shape
+
+    image_shape = train_dataloader.dataset[0][0].shape
     model = SimpleConv(input_shape=image_shape, output_size=10, **model_cfg).to(
         device
     )
@@ -113,7 +119,8 @@ def main(cfg: dict):
 
     for i in range(train_cfg.local_epochs):
         epoch(
-            model, device, train_dataloader, optimizer, criterion, i + 1, use_wandb=True
+            model, device, train_dataloader,
+            optimizer, criterion, i + 1, use_wandb=True,
         )
         evaluate(model, device, test_dataloader, criterion, use_wandb=True)
 

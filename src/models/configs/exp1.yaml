@@ -11,10 +11,10 @@ model:
 training:
   # Core algoritmic settings
   aggregation: fedavg
-  clients: 100
-  communication_rounds: 10
+  clients: 5
+  communication_rounds: 5
   local_epochs: 2
-  clients_per_round: 1
+  clients_per_round: 3
   local_data_amount: 288
 
   # Optimisation arguments
@@ -26,6 +26,10 @@ training:
   dataset: cifar10
   split: dirichlet
   alpha: 0.1
+
+  # Noise arguments
+  noisy_clients: 2
+  noise_std: 0.1  # Applied to standardized images
 
   # Extra arguments
   seed: 42

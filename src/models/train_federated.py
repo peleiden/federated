@@ -7,8 +7,8 @@ from threading import Thread
 from typing import Generator, Optional, OrderedDict
 import time
 
-
 import hydra
+import numpy as np
 import requests
 from omegaconf.dictconfig import DictConfig
 from dotenv import load_dotenv
