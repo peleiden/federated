@@ -32,11 +32,12 @@
     \end{large}\par
     \vfill
     \begin{abstract}
-    Expedita sapiente eveniet in soluta. Rem animi quis harum fugit quia. Aliquid placeat incidunt magni dolorem. Consequatur voluptas eum illum. Nam placeat aperiam pariatur fugit et asperiores eum qui.
-    Rem voluptate molestias ut velit deleniti. Aliquam molestias natus earum. Officia non accusantium placeat provident modi et.
-    Est cupiditate officiis minima velit illo quisquam pariatur blanditiis. In dignissimos veritatis atque omnis repudiandae a dolorem. Ea assumenda blanditiis ut optio laboriosam maxime. Porro libero autem nostrum quisquam ducimus iusto ad amet. Blanditiis ad quasi non sint eaque. Quae aut doloremque repellat sint aspernatur reprehenderit.
-    Rerum beatae eum dolores. Excepturi consequatur quia impedit deserunt rerum sit esse. Veritatis fugiat corrupti voluptate sunt modi velit a.
-    Aliquam ratione vel velit omnis eveniet ea ipsum. Possimus voluptas quidem quo quibusdam sunt facere est. Ad laudantium sit quia.
+        Federated Learning (FL) is emerging as a crucial mechanism for assuring user privacy in large-scale machine learning.
+        In this project, we investigate FL compared to centralized learning on CIFAR-10 and MNIST.
+        Focusing on practical challenges of FL, we develop code for managing a federation of 20 Raspberry Pi's reachable from anywhere as a simulation of real-world devices.
+        On this setup, we implement the foundational FL algorithm, FedAvg, and test its final performance and convergence time efficiency when varying the number of devices available and the amount of local work performed on each device.
+        Robustness is tested by introducing non-iid. device data distributions and adding image noise on a subset of clients.
+        Finally, we investigate how these robustness tests are handled by the more flexible aggregation scheme, FedDF, employing ensemble distillation.
     \end{abstract}
     \vfill
     Project in 02460 Advanced Machine Learning\par
@@ -53,11 +54,45 @@
 
 \section{Introduction}
 \label{sec:intro}
-\cite{lin2020ensemble}
+\begin{enumerate}
+    \item Motivation
+    \item Our approach
+    \item Literature
+\end{enumerate}
 
 
 \section{Methods}%
 \label{sec:methods}
+\subsection{Physical Devices}
+\begin{enumerate}
+    \item Single server HPC 
+    \item 20 physical Raspberry Pi's
+    \item Networking setup
+\end{enumerate}
+
+\subsection{FL Methods}
+\begin{enumerate}
+    \item FedAvg and all parameters
+    \item FedDF
+\end{enumerate}
+
+\subsection{Data Imbalance and Noise}
+\begin{enumerate}
+    \item Dirichlet
+    \item Noise approach
+\end{enumerate}
+
+\subsection{Deep Learning Problem}
+\begin{enumerate}
+    \item Architecture
+    \item Optimization
+    \item Datasets
+\end{enumerate}
+
+\subsection{Evaluation}
+\begin{enumerate}
+    \item Introduce types of experiments
+\end{enumerate}
 
 \section{Results}%
 \label{sec:results}
