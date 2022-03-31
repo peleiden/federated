@@ -174,7 +174,6 @@ def ping_telemetry(ips: list[str], num_clients: int, results: Results):
         results.telemetry[current_client]["memory_usage"].append(json.loads(response.content)["data"]["total-memory-usage-pct"])
         log.debug("Device %i reported %.2f %% memory usage" % (current_client, results.telemetry[current_client]["memory_usage"][-1]))
         current_client = (current_client + 1) % num_clients
-        time.sleep(100)
 
 def reset_all_devices(ips: list[str], num_clients: int):
     if not ips:

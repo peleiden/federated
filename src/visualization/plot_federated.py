@@ -51,8 +51,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("working_directory")
     args = parser.parse_args()
+    os.chdir(args.working_directory)
     os.makedirs("plots", exist_ok=True)
-    os.mkdir("plots")
 
     log.configure("plots.log")
     with log.log_errors:
