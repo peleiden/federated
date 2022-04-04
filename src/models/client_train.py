@@ -6,7 +6,7 @@ from torch.functional import Tensor
 
 from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist, get_cifar10
 from src.models.architectures.conv import SimpleConv
-from src.models.train_model import epoch
+from src.models.train_model import epoch, evaluate
 
 
 class ClientTrainer:
@@ -21,9 +21,10 @@ class ClientTrainer:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         get_data = get_cifar10 if self.train_cfg["dataset"] == "cifar10" else get_mnist
-        self.full_dataset = get_data(data_path or DATA_PATH, train=True)
-        image_shape = self.full_dataset[0][0].shape
-        output_size = len(self.full_dataset.classes)
+        self.train_dataset = get_data(data_path or DATA_PATH, train=True)
+        self.test_dataset = get_data(data_path or DATA_PATH, train=False)
+        image_shape = self.train_dataset[0][0].shape
+        output_size = len(self.train_dataset.classes)
 
         self.model = SimpleConv(
             input_shape=image_shape,
@@ -41,15 +42,18 @@ class ClientTrainer:
         data_key: str,
         split: list[int],
         noise_std: float,
-    ) -> OrderedDict[str, Tensor]:
+    ) -> tuple[OrderedDict[str, Tensor], list[float], list[float]]:
         """
         Receives model from server, trains it and returns trained version
         """
         self.model.load_state_dict(state_dict)
         log(f"Running as client {idx} with data {data_key}")
         local_dataloader = get_dataloader(
-            self.full_dataset, self.train_cfg["batch_size"], split
+            self.train_dataset, self.train_cfg["batch_size"], split
         )
+        local_test_dataloader = get_dataloader(self.test_dataset, self.train_cfg["batch_size"])
+
+        accs, losses = list(), list()
 
         for i in range(self.train_cfg["local_epochs"]):
             epoch(
@@ -62,4 +66,13 @@ class ClientTrainer:
                 noise_std=noise_std,
             )
             self.scheduler.step()
-        return self.model.state_dict()
+            if self.train_cfg["local_eval"]:
+                log.debug("Evaluating model")
+                acc, loss = evaluate(self.model, self.device, local_test_dataloader, self.criterion)
+                accs.append(acc)
+                losses.append(loss.item())
+                log.debug(
+                    "Accuracy: %.4f" % acc,
+                    "Loss:     %.4f" % loss.item(),
+                )
+        return self.model.state_dict(), accs, losses

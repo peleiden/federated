@@ -14,7 +14,7 @@ training:
   clients: 100
   communication_rounds: 8
   local_epochs: 2
-  clients_per_round: 20
+  clients_per_round: 2
   local_data_amount: 288
 
   # Optimisation arguments
@@ -33,6 +33,9 @@ training:
 
   # Extra arguments
   seed: 42
+
+  # Do local evaluation - will increase runtime
+  local_eval: false
 
   # FedDF parameters
   distil:

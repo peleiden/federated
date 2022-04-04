@@ -178,7 +178,7 @@ def train_round() -> str:
     timings["decode"] = tt.tock()
 
     tt.tick()
-    state_dict = trainer.run_round(**args)
+    state_dict, accs, losses = trainer.run_round(**args)
     timings["train"] = tt.tock()
 
     tt.tick()
@@ -188,6 +188,8 @@ def train_round() -> str:
     return {
         "state_dict": b64,
         "timings": timings,
+        "accs": accs,
+        "losses": losses,
     }
 
 @client.get("/end-training")

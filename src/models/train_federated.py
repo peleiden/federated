@@ -59,6 +59,10 @@ class Results(DataStorage):
     test_accuracies: list[float]
     test_losses: list[float]
 
+    # [ comm round [ device [ value ] ] ]
+    local_accs: list[list[list[float]]]
+    local_losses: list[list[list[float]]]
+
     ip: str | None
 
     json_name = "results.json"
@@ -131,9 +135,11 @@ def setup_external_clients(ips: list[str], start_args: dict, num_devices: int, t
     for i in range(num_devices):
         threads[i].join()
 
-def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> Generator[tuple[OrderedDict, dict[str, float]], None, None]:
+def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> Generator[tuple[OrderedDict, dict[str, float], list[list[float]], list[list[float]]], None, None]:
     returned_b64s: list[str] = [None] * len(client_args)
     returned_timings: list[dict[str, float]] = [None] * len(client_args)
+    returned_accs: list[list[float]] = [None] * len(client_args)
+    returned_losses: list[list[float]] = [None] * len(client_args)
 
     def train_single_client(num: int, args: dict):
         args = args.copy()
@@ -153,6 +159,8 @@ def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> 
         returned_b64s[num] = response["data"]["state_dict"]
         returned_timings[num] = response["data"]["timings"]
         returned_timings[num]["response_time"] = response_time
+        returned_accs[num] = response["data"]["accs"]
+        returned_losses[num] = response["data"]["losses"]
 
     threads = list()
     for i, args in enumerate(client_args):
@@ -160,7 +168,7 @@ def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> 
         threads[-1].start()
     for i in range(len(client_args)):
         threads[i].join()
-        yield state_dict_from_base64(returned_b64s[i]), returned_timings[i]
+        yield state_dict_from_base64(returned_b64s[i]), returned_timings[i], returned_accs[i], returned_losses[i]
 
 def ping_telemetry(ips: list[str], num_clients: int, results: Results):
     global _ping_telemetry
@@ -223,6 +231,8 @@ def main(cfg: dict):
         eval_timestamps   = list(),
         test_accuracies   = list(),
         test_losses       = list(),
+        local_accs        = list(),
+        local_losses      = list(),
         ip                = ip,
     )
     if ip and ip.endswith("x"):
@@ -258,9 +268,9 @@ def main(cfg: dict):
         )
 
         if ips:
-            received_data, timings = zip(*run_external_rounds(ips, client_args, training_id))
+            received_data, timings, local_accs, local_losses = zip(*run_external_rounds(ips, client_args, training_id))
         else:
-            received_data = list(run_local_rounds(clients, client_args))
+            received_data, local_accs, local_losses = list(run_local_rounds(clients, client_args))
         server.aggregate(received_data)
         train_time = tt.tock()
 
@@ -277,6 +287,8 @@ def main(cfg: dict):
         results.eval_timestamps.append(time.time())
         results.test_accuracies.append(float(acc))
         results.test_losses.append(float(loss))
+        results.local_accs.append(local_accs)
+        results.local_losses.append(local_losses)
         results.timings.append(
             dict(
                 total_train=train_time,
