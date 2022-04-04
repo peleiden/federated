@@ -314,7 +314,7 @@ def main(cfg: dict):
     wandb.finish()
 
     # Give devices time to shutdown before next round
-    time.sleep(5)
+    time.sleep(10)
 
 
 if __name__ == "__main__":

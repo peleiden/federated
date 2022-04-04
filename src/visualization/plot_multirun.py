@@ -21,7 +21,7 @@ def plot_args(arg: str):
 
     plt.plot(values, perfs)
     plt.grid()
-    plt.xlabel(arg.capitalize())
+    plt.xlabel(arg.capitalize().replace("_", " "))
     plt.ylabel("Final test accuracy [%]")
     plt.savefig("plots/devices-%s.png" % arg)
     plt.close()
