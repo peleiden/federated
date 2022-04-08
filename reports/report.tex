@@ -1,59 +1,89 @@
-% !TeX spellcheck = en_GB
-% !BIB TS-program = biber
-\documentclass[12pt, fleqn]{article}
+% Template for ICASSP-2010 paper; to be used with:
+%          mlspconf.sty  - ICASSP/ICIP LaTeX style file adapted for MLSP, and
+%          IEEEbib.bst - IEEE bibliography style file.
+% --------------------------------------------------------------------------
+\documentclass{article}
+\usepackage{amsmath,graphicx,02460}
 
-\input{praeambulum.tex}
 
-\addbibresource{references.bib}
+\toappear{02460 Advanced Machine Learning, DTU Compute, Spring 2022}
 
-\chead{}
-\rhead{Technical University of Denmark}
-\rfoot{Page \thepage{}~of \pageref{LastPage}}
 
-\graphicspath{{imgs/}}
-\linespread{1.15}
-\newcommand{\abbrv}[2]{\vspace{0.1cm}\textbf{#1} & #2\\}
+\newcommand{\code}[1]{{\texttt{\small#1}}}
+\newcommand{\numberthis}{\addtocounter{equation}{1}\tag{\theequation}}
+\newcommand{\acomm}[1]{\hspace{2.5cm}\text{#1}}
+\newcommand{\low}[1]{\ensuremath{_\textup{#1}}}
 
+\newcommand{\andim}{\textup{ and }}
+\newcommand{\raq}{\Rightarrow\quad}
+\newcommand{\lraq}{\Leftrightarrow\quad}
+\newcommand{\qandq}{\quad\wedge\quad}
+\newcommand{\qorq}{\quad\vee\quad}
+\newcommand{\diff}[2]{\ensuremath{\frac{\md #1}{\md #2}}}
+\newcommand{\md}{\ensuremath{\text{d}}}
+
+\newcommand{\ctp}[1]{\ensuremath{\cdot10^{#1}}}
+\newcommand{\reci}{\ensuremath{^{-1}}}
+\newcommand{\twopow}{\ensuremath{^{2}}}
+\newcommand{\re}[1]{\ensuremath{^{#1}}}
+
+\newcommand{\me}{\ensuremath{\operatorname{e}}}
+\newcommand{\eul}[1]{\ensuremath{\me^{#1}}}
+\newcommand{\len}[1]{\ensuremath{\left\lvert#1\right\rvert}}
+\newcommand{\half}{\ensuremath{\frac{1}{2}}}
+\newcommand{\third}{\ensuremath{\frac{1}{3}}}
+\newcommand{\fourth}{\ensuremath{\frac{1}{4}}}
+\newcommand{\transpose}[1]{\ensuremath{#1^{\textup T}}}
+
+\newcommand{\NN}{\ensuremath{\mathbb N}}
+\newcommand{\ZZ}{\ensuremath{\mathbb Z}}
+\newcommand{\QQ}{\ensuremath{\mathbb Q}}
+\newcommand{\RR}{\ensuremath{\mathbb R}}
+\newcommand{\CC}{\ensuremath{\mathbb C}}
+\newcommand{\LL}{\ensuremath{\mathbb L}}
+\newcommand{\PP}{\ensuremath{\mathbb P}}
+
+\newcommand{\unit}[1]{\ensuremath{\:\text{#1}}}
+\newcommand{\pro}{\ensuremath{\unit{\%{}}}}
+
+%Kommandoer til ændring af ligestillingsmargner
+\newcommand{\jl}[1]{\multicolumn{1}{l}{#1}}
+\newcommand{\jc}[1]{\multicolumn{1}{c}{#1}}
+\newcommand{\jr}[1]{\multicolumn{1}{r}{#1}}
+\newcommand{\jls}[1]{\multicolumn{1}{l|}{#1}}
+\newcommand{\jcs}[1]{\multicolumn{1}{c|}{#1}}
+\newcommand{\jrs}[1]{\multicolumn{1}{r|}{#1}}
+
+\title{20 Raspberry Pi's, One Model: Federated Learning Over Real Hardware}
+\name{Søren Winkel Holm, Asger Laurits Schultz, Gustav Lang Moesmand}
+\address{Technical University of Denmark}
+%
+%
 \begin{document}
+%\ninept
+%
 
-\begin{titlepage}
-    \centering
-    {\huge\bfseries Eating Delicious Raspberry Pie\par}
-    \vspace{1.5cm}
-    \includegraphics[width=0.15\linewidth]{dtu-logo.pdf}\\[1ex]
-    {\scshape\Large Technical University of Denmark \par}
-    \vspace{.5cm}
-    \begin{large}
-        \centering
-        \begin{tabular}{ccc}
-            Søren Winkel Holm & Asger Laurits Schultz & Gustav Lang Moesmand\\
-            \code{s183911@dtu.dk} & \code{s183912@dtu.dk} & \code{s174169@dtu.dk}
-        \end{tabular}
-    \end{large}\par
-    \vfill
-    \begin{abstract}
-        Federated Learning (FL) is emerging as a crucial mechanism for assuring user privacy in large-scale machine learning.
-        In this project, we investigate FL compared to centralized learning on CIFAR-10 and MNIST.
-        Focusing on practical challenges of FL, we develop code for managing a federation of 20 Raspberry Pi's reachable from anywhere as a simulation of real-world devices.
-        On this setup, we implement the foundational FL algorithm, FedAvg, and test its final performance and convergence time efficiency when varying the number of devices available and the amount of local work performed on each device.
-        Robustness is tested by introducing non-iid. device data distributions and adding image noise on a subset of clients.
-        Finally, we investigate how these robustness tests are handled by the more flexible aggregation scheme, FedDF, employing ensemble distillation.
-    \end{abstract}
-    \vfill
-    Project in 02460 Advanced Machine Learning\par
-    Supervisor:\par
-    Bo Li, DTU Compute
-    \vfill
-    {\large May 31, 2022\par}
-\end{titlepage}
+\maketitle
+%
+\begin{abstract}
+    Federated Learning (FL) is emerging as a crucial mechanism for assuring user privacy in large-scale machine learning.
+    To capture the characteristics of FL methods, the unique setup of aggregating models from a federation of disjoint devices must be simulated realistically.
+    Seeking to investigate the resulting practical issues, we install 20 Raspberry Pi's in an experimental configuration for FL on physical clients.
+    % While the field sees active development of new learning approaches, evaluation \cite{kai2021advances}
+    % In this project, we investigate FL compared to centralized learning on CIFAR-10 and MNIST.
+    % Focusing on practical challenges of FL, we develop code for managing a federation of 20 Raspberry Pi's reachable from anywhere as a simulation of real-world devices.
+    % On this setup, we implement the foundational FL algorithm, FedAvg, and test its final performance and convergence time efficiency when varying the number of devices available and the amount of local work performed on each device.
+    % Robustness is tested by introducing non-iid. device data distributions and adding image noise on a subset of clients.
+    % Finally, we investigate how these robustness tests are handled by the more flexible aggregation scheme, FedDF, employing ensemble distillation.
+\end{abstract}
+%
+\begin{keywords}
+    Federated Learning, Deep Learning, Privacy, Computer Vision
+\end{keywords}
 
-\tableofcontents
-
-\setlength{\headheight}{15pt}
-\addtolength{\topmargin}{-2.5pt}.
-
-\section{Introduction}
+\section{INTRODUCTION}
 \label{sec:intro}
+\cite{kai2021advances}
 \begin{enumerate}
     \item Motivation
     \item Our approach
@@ -61,7 +91,7 @@
 \end{enumerate}
 
 
-\section{Methods}%
+\section{METHODS}%
 \label{sec:methods}
 \subsection{Physical Devices}
 \begin{enumerate}
@@ -94,18 +124,16 @@
     \item Introduce types of experiments
 \end{enumerate}
 
-\section{Results}%
+\section{RESULTS}%
 \label{sec:results}
 
-\section{Discussion}%
+\section{DISCUSSION}%
 \label{sec:discussion}
 
+\vfill
+\pagebreak
 
-\renewcommand*{\bibfont}{\normalfont\footnotesize}
-\lhead{Bibliography}
-\printbibliography[heading=bibintoc]
-
-\appendix
-\lhead{Appendix}
+\bibliographystyle{IEEEbib}
+\bibliography{references}
 
 \end{document}
