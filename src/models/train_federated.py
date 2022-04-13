@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import dataclass
 from threading import Thread
 from typing import Generator, Optional, OrderedDict
-import time
 
 import hydra
 import numpy as np
@@ -23,6 +23,9 @@ from src.models.train_model import evaluate
 
 _ping_telemetry = True
 _timeout = 180
+
+# Use WANDB except if WANDB_OFF is set
+USE_WANDB = "WANDB_OFF" not in os.environ
 
 @dataclass
 class Results(DataStorage):
@@ -63,6 +66,7 @@ class Results(DataStorage):
     # [ comm round [ device [ value ] ] ]
     local_accs: list[list[list[float]]]
     local_losses: list[list[list[float]]]
+    local_train_accs: list[list[list[float]]]
 
     ip: str | None
 
@@ -83,7 +87,7 @@ def setup_local_clients(start_args: dict, num_clients: int) -> tuple[ClientTrain
 
 def run_local_rounds(
     clients: tuple[ClientTrainer], client_args: list
-) -> Generator[OrderedDict, None, None]:
+) -> Generator[tuple, None, None]:
     for i, args in enumerate(client_args):
         yield clients[i].run_round(**args)
 
@@ -141,6 +145,7 @@ def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> 
     returned_timings: list[dict[str, float]] = [None] * len(client_args)
     returned_accs: list[list[float]] = [None] * len(client_args)
     returned_losses: list[list[float]] = [None] * len(client_args)
+    returned_train_accs: list[list[float]] = [None] * len(client_args)
 
     def train_single_client(num: int, args: dict):
         args = args.copy()
@@ -162,6 +167,7 @@ def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> 
         returned_timings[num]["response_time"] = response_time
         returned_accs[num] = response["data"]["accs"]
         returned_losses[num] = response["data"]["losses"]
+        returned_train_accs[num] = response["data"]["train_accs"]
 
     threads = list()
     for i, args in enumerate(client_args):
@@ -169,7 +175,8 @@ def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> 
         threads[-1].start()
     for i in range(len(client_args)):
         threads[i].join()
-        yield state_dict_from_base64(returned_b64s[i]), returned_timings[i], returned_accs[i], returned_losses[i]
+        yield state_dict_from_base64(returned_b64s[i]), returned_timings[i],\
+            returned_accs[i], returned_losses[i], returned_train_accs[i]
 
 def ping_telemetry(ips: list[str], num_clients: int, results: Results):
     global _ping_telemetry
@@ -205,6 +212,7 @@ def reset_all_devices(ips: list[str], num_clients: int):
 def main(cfg: dict):
     global _ping_telemetry
     _ping_telemetry = True
+    log("Using wandb: %s" % USE_WANDB)
     server = ServerTrainer(cfg)
     start_args = server.get_client_start_args()
 
@@ -213,7 +221,8 @@ def main(cfg: dict):
     name = cfg.configs.name if "name" in cfg.configs.keys() else "Name not defined"
     # Expects a token in envs called WANDB_API_KEY.
     # This key should match the owner of the key.
-    wandb.init(project=project, entity=entity, name=name)
+    if USE_WANDB:
+        wandb.init(project=project, entity=entity, name=name)
 
     tt = TickTock()
 
@@ -235,6 +244,7 @@ def main(cfg: dict):
         test_losses       = list(),
         local_accs        = list(),
         local_losses      = list(),
+        local_train_accs  = list(),
         ip                = ip,
     )
     if ip and ip.endswith("x"):
@@ -262,6 +272,18 @@ def main(cfg: dict):
 
     train_timer = TickTock()
     train_timer.tick()
+
+    acc, loss = evaluate(
+        server.model,
+        server.device,
+        server.test_dataloader,
+        server.criterion,
+        use_wandb=USE_WANDB,
+    )
+    results.eval_timestamps.append(time.time())
+    results.test_accuracies.append(float(acc))
+    results.test_losses.append(float(loss))
+
     for i in range(cfg.configs.training.communication_rounds):
         tt.tick()
         client_args = server.get_communication_round_args()
@@ -274,9 +296,9 @@ def main(cfg: dict):
         log("%.4f %% noisy data this round" % results.pct_noisy_images_by_round[-1])
 
         if ips:
-            received_data, timings, local_accs, local_losses = zip(*run_external_rounds(ips, client_args, training_id))
+            received_data, timings, local_accs, local_losses, local_train_losses = zip(*run_external_rounds(ips, client_args, training_id))
         else:
-            received_data, local_accs, local_losses = zip(*run_local_rounds(clients, client_args))
+            received_data, local_accs, local_losses, local_train_losses = zip(*run_local_rounds(clients, client_args))
         server.aggregate(received_data)
         train_time = tt.tock()
 
@@ -286,7 +308,7 @@ def main(cfg: dict):
             server.device,
             server.test_dataloader,
             server.criterion,
-            use_wandb=True,
+            use_wandb=USE_WANDB,
         )
         test_time = tt.tock()
 
@@ -295,6 +317,7 @@ def main(cfg: dict):
         results.test_losses.append(float(loss))
         results.local_accs.append(local_accs)
         results.local_losses.append(local_losses)
+        results.local_train_accs.append(local_train_losses)
         results.timings.append(
             dict(
                 total_train=train_time,
@@ -329,7 +352,8 @@ def main(cfg: dict):
         json.dump(res, f, indent=4)
 
     # Stop wandb so multirun does not fail
-    wandb.finish()
+    if USE_WANDB:
+        wandb.finish()
 
     # Give devices time to shut down before next round
     time.sleep(10)

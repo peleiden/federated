@@ -53,10 +53,10 @@ class ClientTrainer:
         )
         local_test_dataloader = get_dataloader(self.test_dataset, self.train_cfg["batch_size"])
 
-        accs, losses = list(), list()
+        accs, losses, train_accs = list(), list(), list()
 
         for i in range(self.train_cfg["local_epochs"]):
-            epoch(
+            train_acc = epoch(
                 self.model,
                 self.device,
                 local_dataloader,
@@ -65,6 +65,7 @@ class ClientTrainer:
                 i + 1,
                 noisy_images=noisy_images,
             )
+            train_accs.append(train_acc)
             self.scheduler.step()
             if self.train_cfg["local_eval"]:
                 log.debug("Evaluating model")
@@ -75,4 +76,4 @@ class ClientTrainer:
                     "Accuracy: %.4f" % acc,
                     "Loss:     %.4f" % loss.item(),
                 )
-        return self.model.state_dict(), accs, losses
+        return self.model.state_dict(), accs, losses, train_accs

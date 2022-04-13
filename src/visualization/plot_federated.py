@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import os
 import shutil
 
+from matplotlib.ticker import MaxNLocator
 from pelutils import log
 from pelutils.ds.plot import figsize_std, update_rc_params, rc_params
 import matplotlib.pyplot as plt
@@ -20,24 +21,25 @@ def plot_accuracy():
 
     local_epochs = train_cfg.local_epochs
     comm_rounds = train_cfg.communication_rounds
-    comm_rounds = np.arange(1, comm_rounds+1)
+    comm_rounds = np.arange(comm_rounds+1)
 
-    plt.figure(figsize=figsize_std)
+    ax = plt.figure(figsize=figsize_std).gca()
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
     try:
-        for i in comm_rounds-1:
+        for i in comm_rounds[:-1]:
             for j in range(res.clients_per_round):
-                if i:
-                    x = i + np.arange(local_epochs+1) / local_epochs
-                    y = [res.test_accuracies[i-1], *res.local_accs[i][j]]
-                else:
-                    x = i+np.arange(1, local_epochs+1)/local_epochs
-                    y = res.local_accs[i][j]
-                plt.plot(x, y, alpha=0.5, label="Local test accuracy" if not (i or j) else None, color="gray")
+                x = i + np.arange(local_epochs+1) / local_epochs
+                y = [res.test_accuracies[i], *res.local_accs[i][j]]
+                plt.plot(x, y, alpha=0.3, label="Local test accuracy" if not (i or j) else None, color="tab:green")
     except ValueError:
         pass
 
-    if any(x < 100 for x in res.pct_noisy_images_by_round):
-        plt.plot(comm_rounds, res.pct_noisy_images_by_round, "-o", label="% noisy images")
+    for i in comm_rounds[:-1]:
+        for j in range(res.clients_per_round):
+            x = i + np.arange(local_epochs+1) / local_epochs
+            y = [100*x for x in res.local_train_accs[i][j]]
+            plt.plot(x[1:], y, alpha=0.3, label="Local training accuracy" if not (i or j) else None, color="tab:orange")
 
     plt.plot(
         comm_rounds,
@@ -45,6 +47,9 @@ def plot_accuracy():
         "-o",
         label="Global test accuracy",
     )
+    if any(x > 100 for x in res.pct_noisy_images_by_round):
+        plt.plot(comm_rounds[1:], res.pct_noisy_images_by_round, "-o", label="% noisy images")
+
     plt.title("Accuracy")
     plt.xlabel("Communication rounds")
     plt.ylabel("Accuracy [%]")

@@ -20,17 +20,23 @@ def epoch(
     epoch: int,
     use_wandb: bool = False,
     noisy_images: float = 0,
-):
+) -> float:
+    """ Returns mean training accuracy """
     model.train()
+    train_acc = 0
     for batch_idx, (data, target) in enumerate(dataloader):
         data, target = data.to(device), target.to(device)
         num_noisy_images = int(noisy_images*len(target))
         target = target.clone()
-        target[:num_noisy_images] = torch.randint(0, 10, (num_noisy_images,))
+        target[torch.randperm(len(target))[:num_noisy_images]] = torch.randint(0, 10, (num_noisy_images,), device=target.device)
         log.debug("Scrambled %i labels" % num_noisy_images)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
+        train_acc += (torch.softmax(output, dim=-1).argmax(dim=-1) == target)\
+            .to(float)\
+            .mean()\
+            .item()
         loss.backward()
         optimizer.step()
         if batch_idx % LOG_INTERVAL == 0:
@@ -54,6 +60,7 @@ def epoch(
                     }
                 )
         del output, loss
+    return train_acc / (batch_idx+1)
 
 def evaluate(
     model: torch.nn.Module,
