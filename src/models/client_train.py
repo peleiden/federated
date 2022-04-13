@@ -41,7 +41,7 @@ class ClientTrainer:
         idx: int,
         data_key: str,
         split: list[int],
-        noise_std: float,
+        noisy_images: float,
     ) -> tuple[OrderedDict[str, Tensor], list[float], list[float]]:
         """
         Receives model from server, trains it and returns trained version
@@ -63,7 +63,7 @@ class ClientTrainer:
                 self.optimizer,
                 self.criterion,
                 i + 1,
-                noise_std=noise_std,
+                noisy_images=noisy_images,
             )
             self.scheduler.step()
             if self.train_cfg["local_eval"]:

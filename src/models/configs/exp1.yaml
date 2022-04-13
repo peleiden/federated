@@ -11,25 +11,25 @@ model:
 training:
   # Core algoritmic settings
   aggregation: fedavg
-  clients: 100
-  communication_rounds: 8
-  local_epochs: 2
-  clients_per_round: 2
-  local_data_amount: 288
+  clients: 40
+  communication_rounds: 20
+  local_epochs: 20
+  clients_per_round: 20
+  local_data_amount: 1250
 
   # Optimisation arguments
-  batch_size: 40
-  lr_gamma: 1
+  batch_size: 32
+  lr_gamma: 0.995
   lr: 0.001
 
   # Dataset settings
   dataset: cifar10
-  split: iid
-  alpha: 0.1
+  split: dirichlet
+  alpha: 1
 
   # Noise arguments
-  noisy_clients: 2
-  noise_std: 0.1  # Applied to standardized images
+  noisy_clients: 0
+  noisy_images: 1  # Share of scrambled labels per noisy client
 
   # Extra arguments
   seed: 42

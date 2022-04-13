@@ -11,7 +11,6 @@ from src.models.architectures.conv import SimpleConv
 LOG_INTERVAL = 1
 
 
-# @profile
 def epoch(
     model: torch.nn.Module,
     device: torch.device,
@@ -20,14 +19,15 @@ def epoch(
     criterion: torch.nn.Module,
     epoch: int,
     use_wandb: bool = False,
-    noise_std: float = 0,
+    noisy_images: float = 0,
 ):
     model.train()
     for batch_idx, (data, target) in enumerate(dataloader):
         data, target = data.to(device), target.to(device)
-        data = data.clone()
-        if noise_std > 0:
-            data += noise_std * torch.randn(*data.shape)
+        num_noisy_images = int(noisy_images*len(target))
+        target = target.clone()
+        target[:num_noisy_images] = torch.randint(0, 10, (num_noisy_images,))
+        log.debug("Scrambled %i labels" % num_noisy_images)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
@@ -36,7 +36,6 @@ def epoch(
         if batch_idx % LOG_INTERVAL == 0:
             update = batch_idx * len(data)
             mean_loss = loss.item() / len(data)
-            log.debug("Noise: %.4f std" % noise_std)
             log.debug(
                 "Train Epoch: {} [{}/{} ({:.0f}%)]\tMean loss: {:.4f}".format(
                     epoch,
@@ -55,7 +54,6 @@ def epoch(
                     }
                 )
         del output, loss
-
 
 def evaluate(
     model: torch.nn.Module,

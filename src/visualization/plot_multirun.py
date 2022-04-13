@@ -1,11 +1,14 @@
 from argparse import ArgumentParser
 import os
-import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pelutils.ds.plot import figsize_std, update_rc_params, rc_params
 
 from src.models.train_federated import Results
+
+
+update_rc_params(rc_params)
 
 
 def plot_args(arg: str):
@@ -19,10 +22,20 @@ def plot_args(arg: str):
     values = values[argsort]
     perfs = perfs[argsort]
 
-    plt.plot(values, perfs)
+    unique_values = np.unique(values)
+    means = np.zeros(unique_values.size)
+    for i, unique_value in enumerate(unique_values):
+        means[i] = perfs[values==unique_value].mean()
+
+    plt.figure(figsize=figsize_std)
+    plt.scatter(values, perfs, label="Measurements")
+    plt.plot(unique_values, means, label="Mean")
     plt.grid()
+    plt.legend()
     plt.xlabel(arg.capitalize().replace("_", " "))
     plt.ylabel("Final test accuracy [%]")
+    plt.ylim([-5, 105])
+    plt.tight_layout()
     plt.savefig("plots/devices-%s.png" % arg)
     plt.close()
 

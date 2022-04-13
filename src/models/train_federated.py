@@ -12,7 +12,7 @@ import numpy as np
 import requests
 from omegaconf.dictconfig import DictConfig
 from dotenv import load_dotenv
-from pelutils import DataStorage, Levels, TickTock, log
+from pelutils import DataStorage, Levels, TickTock, log, TT
 
 import wandb
 from src.client_utils import state_dict_from_base64, state_dict_to_base64
@@ -33,6 +33,7 @@ class Results(DataStorage):
     clients_per_round: int
     num_images: int
     train_time: float
+    pct_noisy_images_by_round: list[float]
     # List of timings for each round
     # [
     # {
@@ -226,6 +227,7 @@ def main(cfg: dict):
         num_images        = server.train_cfg.communication_rounds * server.train_cfg.local_epochs *\
             server.train_cfg.clients_per_round * server.train_cfg.local_data_amount,
         train_time        = 0,
+        pct_noisy_images_by_round = list(),
         timings           = list(),
         telemetry         = [{"timestamp": list(), "memory_usage": list()} for _ in range(server.train_cfg.clients_per_round)],
         eval_timestamps   = list(),
@@ -263,14 +265,18 @@ def main(cfg: dict):
     for i in range(cfg.configs.training.communication_rounds):
         tt.tick()
         client_args = server.get_communication_round_args()
+        client_idcs = { c["idx"] for c in client_args }
         log.section(
-            f"Round {i}. Chose clients with idx", list(c["idx"] for c in client_args)
+            f"Round {i}. Chose clients with idx", client_idcs
         )
+        pct_noisy_clients = 100 * np.array([idx in server.noisy_clients for idx in client_idcs]).mean()
+        results.pct_noisy_images_by_round.append(pct_noisy_clients * server.train_cfg["noisy_images"])
+        log("%.4f %% noisy data this round" % results.pct_noisy_images_by_round[-1])
 
         if ips:
             received_data, timings, local_accs, local_losses = zip(*run_external_rounds(ips, client_args, training_id))
         else:
-            received_data, local_accs, local_losses = list(run_local_rounds(clients, client_args))
+            received_data, local_accs, local_losses = zip(*run_local_rounds(clients, client_args))
         server.aggregate(received_data)
         train_time = tt.tock()
 
@@ -325,7 +331,7 @@ def main(cfg: dict):
     # Stop wandb so multirun does not fail
     wandb.finish()
 
-    # Give devices time to shutdown before next round
+    # Give devices time to shut down before next round
     time.sleep(10)
 
 
