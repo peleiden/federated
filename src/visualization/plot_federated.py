@@ -5,7 +5,7 @@ import shutil
 
 from matplotlib.ticker import MaxNLocator
 from pelutils import log
-from pelutils.ds.plot import figsize_std, update_rc_params, rc_params
+from pelutils.ds.plot import figsize_wide, update_rc_params, rc_params
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -23,7 +23,7 @@ def plot_accuracy():
     comm_rounds = train_cfg.communication_rounds
     comm_rounds = np.arange(comm_rounds+1)
 
-    ax = plt.figure(figsize=figsize_std).gca()
+    ax = plt.figure(figsize=figsize_wide).gca()
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     try:
@@ -64,7 +64,7 @@ def plot_memory():
     log.section("Plotting memory")
     res = Results.load()
 
-    plt.figure(figsize=figsize_std)
+    plt.figure(figsize=figsize_wide)
     plt.title("Memory usage")
     start_time = res.telemetry[0]["timestamp"][0]
     if res.ip:
