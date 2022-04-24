@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from telnetlib import COM_PORT_OPTION
 import time
 from dataclasses import dataclass
 from threading import Thread
@@ -36,6 +37,8 @@ class Results(DataStorage):
     clients_per_round: int
     num_images: int
     train_time: float
+    max_time: float
+    comm_rounds: int
     pct_noisy_images_by_round: list[float]
     # List of timings for each round
     # [
@@ -228,14 +231,17 @@ def main(cfg: dict):
 
     ip: Optional[str] = os.environ.get("IP")
 
+    max_time = vars(server.train_cfg).get("max_time", 1e10)
+
     results = Results(
         cfg               = cfg,
         start_args        = start_args,
         clients           = server.train_cfg.clients,
         clients_per_round = server.train_cfg.clients_per_round,
-        num_images        = server.train_cfg.communication_rounds * server.train_cfg.local_epochs *\
-            server.train_cfg.clients_per_round * server.train_cfg.local_data_amount,
+        num_images        = 0,
         train_time        = 0,
+        max_time          = max_time,
+        comm_rounds       = 0,
         pct_noisy_images_by_round = list(),
         timings           = list(),
         telemetry         = [{"timestamp": list(), "memory_usage": list()} for _ in range(server.train_cfg.clients_per_round)],
@@ -285,6 +291,8 @@ def main(cfg: dict):
     results.test_losses.append(float(loss))
 
     for i in range(cfg.configs.training.communication_rounds):
+        if train_timer.tock() > max_time:
+            break
         tt.tick()
         client_args = server.get_communication_round_args()
         client_idcs = { c["idx"] for c in client_args }
@@ -331,6 +339,10 @@ def main(cfg: dict):
                 ]
             else:
                 results.timings[-1][device_timing_key] = list()
+
+        results.comm_rounds += 1
+        results.num_images += server.train_cfg.local_epochs *\
+            server.train_cfg.clients_per_round * server.train_cfg.local_data_amount,
 
     log.section("Cleaning up")
     results.train_time = train_timer.tock()
