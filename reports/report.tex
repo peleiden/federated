@@ -128,10 +128,24 @@
 \label{sec:results}
 
 \begin{table}
+        \footnotesize
+        \begin{center}
+                \begin{tabular}{l l l l l l}
+                        Local epochs & 1 & 10 & 20 & 40 & 80 \\
+                        \hline
+                        Test acc. [\%] & $47.1 \pm 1.0$ & $56.6 \pm 0.8$ & $56.3 \pm 0.7$ & $55.9 \pm 0.6$ & $54.1 \pm 0.5$ \\
+                \end{tabular}
+        \end{center}
+        \caption{}
+        \label{tab:local_epochs}
+\end{table}
+
+
+\begin{table}
         \small
         \begin{center}
                 \begin{tabular}{l l l l l}
-                        Dirichlet $\\alpha$ & 0.01 & 1.0 & 100.0 & iid \\
+                        Class balance $\alpha$ & 0.01 & 1.0 & 100.0 & iid \\
                         \hline
                         Test acc. [\%] & $34.8 \pm 3.4$ & $55.4 \pm 0.9$ & $57.4 \pm 0.4$ & $68.6 \pm 0.5$ \\
                 \end{tabular}

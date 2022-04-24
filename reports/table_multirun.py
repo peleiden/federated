@@ -9,7 +9,7 @@ from texttable import Texttable
 from latextable import draw_latex
 from src.models.train_federated import Results
 
-NAMES = dict(alpha=r"Class balance ($\alpha$)", clients_per_round="Clients sampled", noisy_clients="Noisy clients")
+NAMES = dict(alpha=r"Class balance ($\alpha$)", clients_per_round="Clients sampled", noisy_clients="Noisy clients", local_epochs="Local epochs")
 
 def results_and_cfgs(path: str):
     jobs = os.listdir(path)
