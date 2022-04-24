@@ -338,7 +338,7 @@ def main(cfg: dict):
 
         results.comm_rounds += 1
         results.num_images += server.train_cfg.local_epochs *\
-            server.train_cfg.clients_per_round * server.train_cfg.local_data_amount,
+            server.train_cfg.clients_per_round * server.train_cfg.local_data_amount
 
     log.section("Cleaning up")
     results.train_time = train_timer.tock()
