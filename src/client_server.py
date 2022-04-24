@@ -78,7 +78,7 @@ def _endpoint(fun: Callable):
             return jsonify(
                 {
                     "data": None,
-                    "error-message": str(e),
+                    "error-message": tb.format_exc(),
                 }
             ), 500
 

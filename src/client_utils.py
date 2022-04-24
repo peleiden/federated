@@ -8,6 +8,8 @@ from collections import OrderedDict
 import torch
 
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def get_ip() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(0)
@@ -29,7 +31,7 @@ def state_dict_to_base64(state_dict: OrderedDict) -> str:
 
 def state_dict_from_base64(b64: str) -> OrderedDict:
     buffer = io.BytesIO(base64.b64decode(b64))
-    return torch.load(buffer)
+    return torch.load(buffer, map_location=device)
 
 def is_rpi() -> bool:
     """ I'd just like to interject for a moment. What you're refering to as Linux, is in fact, GNU/Linux,

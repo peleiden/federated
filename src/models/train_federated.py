@@ -131,9 +131,7 @@ def setup_external_clients(ips: list[str], start_args: dict, num_devices: int, t
             training_id=training_id,
         ))
         if response.status_code != 200:
-            raise IOError(
-                "Device %i returned status code %i" % (num, response.status_code)
-            )
+            raise IOError("Device %i returned status code %i\nError: %s" % (num, response.status_code, response.content))
         log("Device %i configured" % num)
 
     threads = list()
@@ -160,9 +158,7 @@ def run_external_rounds(ips: list[str], client_args: list, training_id: int) -> 
         response = requests.post(f"http://{ips[num]}:{3080+num}/train-round", json=args)
         response_time = tt.tock()
         if response.status_code != 200:
-            raise IOError(
-                "Device %i returned status code %i" % (num, response.status_code)
-            )
+            raise IOError("Device %i returned status code %i\nError: %s" % (num, response.status_code, response.content))
         log("Device %i finished local training" % num)
         response = json.loads(response.content)
         returned_b64s[num] = response["data"]["state_dict"]
@@ -188,7 +184,7 @@ def ping_telemetry(ips: list[str], num_clients: int, results: Results):
         log.debug("Requesting telemetry from client %i" % current_client)
         response = requests.get(f"http://{ips[current_client]}:{3080+current_client}/telemetry")
         if response.status_code != 200:
-            raise IOError("Device %i returned status code %i" % (current_client, response.status_code))
+            raise IOError("Device %i returned status code %i\nError: %s" % (current_client, response.status_code, response.content))
         results.telemetry[current_client]["timestamp"].append(time.time())
         results.telemetry[current_client]["memory_usage"].append(json.loads(response.content)["data"]["total-memory-usage-pct"])
         log.debug("Device %i reported %.2f %% memory usage" % (current_client, results.telemetry[current_client]["memory_usage"][-1]))
@@ -201,7 +197,7 @@ def reset_all_devices(ips: list[str], num_clients: int):
     def reset_device(num: int):
         response = requests.get(f"http://{ips[num]}:{3080+num}/end-training")
         if response.status_code != 200:
-            raise IOError("Device %i returned status code %i" % (num, response.status_code))
+            raise IOError("Device %i returned status code %i\nError: %s" % (num, response.status_code, response.content))
         log("Reset device %i" % num)
 
     threads = list()
