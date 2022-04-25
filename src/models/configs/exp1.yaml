@@ -11,14 +11,15 @@ model:
 training:
   # Core algoritmic settings
   aggregation: fedavg
-  clients: 40
+  clients: 50
   communication_rounds: 20
   local_epochs: 20
   clients_per_round: 20
   local_data_amount: 1250
+  max_time: 1000000000
 
   # Optimisation arguments
-  batch_size: 32
+  batch_size: 16
   lr_gamma: 0.995
   lr: 0.0005
 

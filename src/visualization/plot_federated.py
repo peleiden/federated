@@ -20,8 +20,7 @@ def plot_accuracy():
     train_cfg = res.cfg.configs.training
 
     local_epochs = train_cfg.local_epochs
-    comm_rounds = train_cfg.communication_rounds
-    comm_rounds = np.arange(comm_rounds+1)
+    comm_rounds = np.arange(len(res.test_accuracies))
 
     ax = plt.figure(figsize=figsize_wide).gca()
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))

@@ -227,7 +227,8 @@ def main(cfg: dict):
 
     ip: Optional[str] = os.environ.get("IP")
 
-    max_time = vars(server.train_cfg).get("max_time", 1e10)
+    max_time = server.train_cfg.max_time
+    log("Stopping in %.2f s" % max_time)
 
     results = Results(
         cfg               = cfg,
