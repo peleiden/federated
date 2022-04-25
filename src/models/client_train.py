@@ -33,6 +33,7 @@ class ClientTrainer:
             **self.model_cfg,
         ).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.train_cfg["lr"])
+        self.original_state_dict = self.optimizer.state_dict().copy()
         self.criterion = torch.nn.CrossEntropyLoss()
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=1, gamma=self.train_cfg["lr_gamma"])
 
@@ -77,4 +78,6 @@ class ClientTrainer:
                     "Accuracy: %.4f" % acc,
                     "Loss:     %.4f" % loss.item(),
                 )
+            self.model.zero_grad()
+            self.optimizer.load_state_dict(self.original_state_dict)
         return self.model.state_dict(), accs, losses, train_accs
