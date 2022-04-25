@@ -5,6 +5,8 @@
 \documentclass{article}
 \usepackage{amsmath,graphicx,02460}
 
+\usepackage{url}
+\allowdisplaybreaks
 
 \toappear{02460 Advanced Machine Learning, DTU Compute, Spring 2022}
 
@@ -66,15 +68,11 @@
 \maketitle
 %
 \begin{abstract}
-    Federated Learning (FL) is emerging as a crucial mechanism for assuring user privacy in large-scale machine learning.
+    Federated Learning (FL) is emerging as a essential mechanism for assuring user privacy in large-scale machine learning (ML) \cite{kai2021advances}.
     To capture the characteristics of FL methods, the unique setup of aggregating models from a federation of disjoint devices must be simulated realistically.
     Seeking to investigate the resulting practical issues, we install 20 Raspberry Pi's in an experimental configuration for FL over physical clients.
-    % While the field sees active development of new learning approaches, evaluation \cite{kai2021advances}
-    % In this project, we investigate FL compared to centralized learning on CIFAR-10 and MNIST.
-    % Focusing on practical challenges of FL, we develop code for managing a federation of 20 Raspberry Pi's reachable from anywhere as a simulation of real-world devices.
-    % On this setup, we implement the foundational FL algorithm, FedAvg, and test its final performance and convergence time efficiency when varying the number of devices available and the amount of local work performed on each device.
-    % Robustness is tested by introducing non-iid. device data distributions and adding image noise on a subset of clients.
-    % Finally, we investigate how these robustness tests are handled by the more flexible aggregation scheme, FedDF, employing ensemble distillation.
+    We setup experiments with hyperparameters in the FedAvg \cite{mcmahan2017communication} algorithm including the number of local device epochs for which we identify a trade-off between spending time on communication and on local computation.
+    Testing robustness both against imbalanced data across devices and the addition of rogue, noisy clients, we highlight the potential of using stronger aggregation schemes than averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
 \end{abstract}
 %
 \begin{keywords}
@@ -83,13 +81,17 @@
 
 \section{INTRODUCTION}
 \label{sec:intro}
-\cite{kai2021advances}
-\begin{enumerate}
-    \item Motivation
-    \item Our approach
-    \item Literature
-\end{enumerate}
+Large-scale surveys have shown that the growing use of Artificial Intelligence (AI) has resulted in a widespread fear about loss of personal privacy \cite{beuc2020consumers, west2018survey}.
+As a part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases such as Siri, Google Chrome and Gboard \cite{kai2021advances}.
 
+FL covers the ML setup where multiple clients collaborate in learning from local data across clients which is not exchanged and a central server aggregates updates \cite{kai2021advances, mcmahan2017communication}.
+When the aggregation corresponds to the average over weights from models each produced by training multiple local epochs on each client, the algorithm is the formative \emph{FedAvg}\cite{mcmahan2017communication}.
+Many further aggregation methods exist, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}, and we refer to Kairouz et al. for an overview \cite{kai2021advances}.
+
+Across this rich literature, many benchmarks of FL performance over algorithmic choices exist, but are often performed by simulating the federation on central compute clusters.
+In this project, we seek to capture the unique hardware setup of FL use-cases such as smartphones where a number of computationally weak edge devices hold the data.
+This is performed by performing local training of a convolutional neural network (CNN) on 20 Raspberry Pi devices over which CIFAR-10 \cite{alex2009learning} is divided, and aggregating these centrally using FedAvg.
+The aim of the project is to investigate the impact of FedAvg hyperparameters on convergence time, analyze aggregation robustness against imbalanced and noisy data, and uncover performance bottlenecks and tradeoffs in the physical hardware setting.
 
 \section{METHODS}%
 \label{sec:methods}
