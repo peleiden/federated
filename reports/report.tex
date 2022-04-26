@@ -1,3 +1,4 @@
+% !TeX spellcheck = en_GB
 % Template for ICASSP-2010 paper; to be used with:
 %          mlspconf.sty  - ICASSP/ICIP LaTeX style file adapted for MLSP, and
 %          IEEEbib.bst - IEEE bibliography style file.
@@ -56,7 +57,7 @@
 \newcommand{\jcs}[1]{\multicolumn{1}{c|}{#1}}
 \newcommand{\jrs}[1]{\multicolumn{1}{r|}{#1}}
 
-\title{20 Raspberry Pi's, One Model: Federated Learning Over Real Hardware}
+\title{20 Raspberry Pi's, One Model: Federated Learning On Real Hardware}
 \name{Søren Winkel Holm, Asger Laurits Schultz, Gustav Lang Moesmand}
 \address{Technical University of Denmark}
 %
@@ -95,18 +96,26 @@ The aim of the project is to investigate the impact of FedAvg hyperparameters on
 
 \section{METHODS}%
 \label{sec:methods}
-\subsection{Physical Devices}
-\begin{enumerate}
-    \item Single server HPC 
-    \item 20 physical Raspberry Pi's
-    \item Networking setup
-\end{enumerate}
 
 \subsection{FL Methods}
 \begin{enumerate}
     \item FedAvg and all parameters
     \item FedDF
 \end{enumerate}
+
+\subsection{Physical Devices}
+The project setup is divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi's.
+Crucially, the Pi's are located on a network seperate from the HPC to get more realistic communication overhead.
+The HPC is responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model.
+The code was designed to not require physical devices, so experiments where running time was not of interest could be run on the A100 for faster training time and a reduced power bill.
+
+Every Pi runs a Flask server that receives a model every communication round and returning the trained local model along with telemetry data such as memory usage, which is an important consideration when running on such resource-limited devices.
+The Flask server also had a route for sending commands to allow for primitive over-the-air-update functionality.
+The Pi's were made accessible to the HPC using port-forwarding.
+
+Each Pi is connected to a switch, which in turn is connected via cable to the router.
+If the switches are turned off, the Pi's connect to the router via Wi-Fi, which allows testing the impact of communication overhead in two cases: under relatively fast ethernet and relatively slow Wi-Fi.
+For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilized on ethernet, but only about 40\pro\ utilized on Wi-Fi.
 
 \subsection{Data Imbalance and Noise}
 \begin{enumerate}
