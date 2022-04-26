@@ -11,7 +11,7 @@
 
 echo "TRAINING"
 
-python src/models/train_federated.py -m configs.training.clients_per_round=5,5,5,5,5,10,10,10,10,10,20,20,20,20,20,40,40,40,40,40
+python src/models/train_federated.py -m configs.training.clients_per_round=5,5,5,5,5,10,10,10,10,10,20,20,20,20,20,50,50,50,50,50
 
 python src/models/train_federated.py -m configs.training.local_epochs=1,1,1,1,1,10,10,10,10,10,20,20,20,20,20,40,40,40,40,40,80,80,80,80,80
 
