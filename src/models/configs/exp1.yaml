@@ -1,10 +1,10 @@
 
 model:
-  channels_1: 32
-  channels_2: 64
+  channels_1: 16
+  channels_2: 32
   kernel: 3
   maxpool_kernel: 2
-  linear_hidden: 128
+  linear_hidden: 64
   dropout_1: 0.25
   dropout_2: 0.5
 
