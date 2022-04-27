@@ -243,6 +243,6 @@ if __name__ == "__main__":
     get_cifar10(DATA_PATH, train=True, download=True)
     get_cifar10(DATA_PATH, train=False, download=True)
     # CIFAR-100
-    get_cifar10(DATA_PATH, train=True, download=True, cifar100=True)
-    get_cifar10(DATA_PATH, train=False, download=True, cifar100=True)
+    # get_cifar10(DATA_PATH, train=True, download=True, cifar100=True)
+    # get_cifar10(DATA_PATH, train=False, download=True, cifar100=True)
     print("Done.")
