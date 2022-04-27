@@ -10,7 +10,7 @@ from torchvision import datasets, transforms
 from torchvision.datasets import VisionDataset
 
 DATA_PATH = os.path.join(sys.path[0], "..", "..", "data")
-EACH_LABEL = 1500
+EACH_LABEL = 2000
 
 
 def get_dataloader(

@@ -15,7 +15,7 @@ training:
   communication_rounds: 20
   local_epochs: 20
   clients_per_round: 20
-  local_data_amount: 375
+  local_data_amount: 500
   max_time: 1000000000
 
   # Optimisation arguments
