@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     # Generate example data
     dataset = get_cifar10(DATA_PATH, train=False)
-    alpha, clients, local_data_amount = 0.1, 10, 500
+    alpha, clients, local_data_amount = 100, 50, 1000
     split = DirichletUnbalanced(alpha).split(clients, local_data_amount, dataset)
 
     # Visualize dirichilet
