@@ -58,6 +58,7 @@ class DirichletUnbalanced(Splitter):
 
         # Draw dirichlet distribution
         samples = np.random.default_rng().dirichlet([self.alpha]*L, clients)
+        # samples /= samples.sum()
 
         # Run iterative procedure, shuffling the drawn Dirichlet samples to get uniformity over
         i = 0
@@ -87,11 +88,9 @@ class DirichletUnbalanced(Splitter):
                 samples[j, idx2] = tmp
             i += 1
             unif = uniformity(samples)
-        # Normalize by majority label if we don't have enough data to oversample
-        if (max_oversample := samples.sum(axis=0).max()) * local_data_amount < idx.shape[1]:
-            max_oversample = 1
+        samples = samples * (clients / idx.shape[0]) / samples.sum(0).max()
         # Convert the (somewhat) normalized samples to class amounts
-        label_amounts = (samples/max_oversample * local_data_amount).astype(int)
+        label_amounts = (samples * local_data_amount).astype(int)
         # Divide amounts first amongst labels, then joining up on each client
         label_splits = [np.split(idx[i], division) for i, division in enumerate(label_amounts.cumsum(0).T)]
         splits = [np.concatenate([l[i] for l in label_splits]) for i in range(clients)]
@@ -104,20 +103,22 @@ if __name__ == "__main__":
     from src.data.make_dataset import get_cifar10, DATA_PATH
 
     # Generate example data
-    dataset = get_cifar10(DATA_PATH, train=False)
+    dataset = get_cifar10(DATA_PATH, train=True)
     alpha, clients, local_data_amount = 100, 50, 1000
-    split = DirichletUnbalanced(alpha).split(clients, local_data_amount, dataset)
+    # split = DirichletUnbalanced(alpha).split(clients, local_data_amount, dataset)
+    split = EqualIIDSplit().split(clients, local_data_amount, dataset)
+    lens = [len(x) for x in split.values()]
+    print(f"Total amount {sum(lens)}, max amount {max(lens)}, min amount {min(lens)}.")
 
     # Visualize dirichilet
     K = len(dataset.classes)
     labels = [[dataset[i][1] for i in idx] for idx in split.values()]
     pos = np.zeros((clients, K))
 
-
     for i in range(clients):
         for label, count in zip(*np.unique(labels[i], return_counts=True)):
             pos[i, label] = count
-    pos /= pos.sum(1)
+    pos /= pos.sum(1, keepdims=True)
     pos *= 100
     left = np.zeros(clients)
     for i in range(K):
@@ -128,5 +129,7 @@ if __name__ == "__main__":
     plt.ylabel("Client")
     plt.xlabel("Label distribution [%]")
     plt.xlim(-2, 102)
-    plt.title(f"Dirichlet($\\alpha={alpha}$)")
-    plt.savefig(f"reports/imgs/splits({alpha=}).pdf")
+    # plt.title(f"Dirichlet($\\alpha={alpha}$)")
+    # plt.savefig(f"reports/imgs/splits({alpha=}).pdf")
+    plt.title(f"IID")
+    plt.savefig(f"reports/imgs/splits(IID).pdf")
