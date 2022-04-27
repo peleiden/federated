@@ -4,11 +4,13 @@ import os
 import sys
 from typing import Optional
 
+import numpy as np
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 from torchvision.datasets import VisionDataset
 
 DATA_PATH = os.path.join(sys.path[0], "..", "..", "data")
+EACH_LABEL = 1500
 
 
 def get_dataloader(
@@ -20,6 +22,7 @@ def get_dataloader(
         dataset = Subset(dataset, split)
     # Shuffle if we're on training data
     train = dataset.dataset.train if isinstance(dataset, Subset) else dataset.train
+
     return DataLoader(dataset, batch_size, shuffle=train)
 
 
@@ -38,6 +41,11 @@ def get_mnist(
     dataset = datasets.MNIST(
         data_folder, train=train, download=download, transform=transform
     )
+    targets = np.array(dataset.targets)
+    indices = list()
+    for i in range(len(dataset.classes)):
+        indices.extend(np.where(targets==i)[0].tolist()[:EACH_LABEL])
+    dataset = Subset(dataset, indices).dataset
     return dataset
 
 

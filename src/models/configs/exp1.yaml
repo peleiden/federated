@@ -1,10 +1,10 @@
 
 model:
-  channels_1: 3
-  channels_2: 6
+  channels_1: 4
+  channels_2: 8
   kernel: 3
   maxpool_kernel: 2
-  linear_hidden: 6
+  linear_hidden: 8
   dropout_1: 0.25
   dropout_2: 0.5
 
@@ -15,7 +15,7 @@ training:
   communication_rounds: 20
   local_epochs: 20
   clients_per_round: 20
-  local_data_amount: 1500
+  local_data_amount: 375
   max_time: 1000000000
 
   # Optimisation arguments
