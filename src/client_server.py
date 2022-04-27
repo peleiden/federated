@@ -25,7 +25,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 from src.client_utils import get_ip, state_dict_from_base64, state_dict_to_base64, is_rpi
 from src.models.client_train import ClientTrainer
 
-
 # Create client server
 client = Flask(__name__)
 Api(client)

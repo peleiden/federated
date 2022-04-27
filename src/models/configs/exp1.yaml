@@ -1,21 +1,21 @@
 
 model:
-  channels_1: 16
-  channels_2: 32
+  channels_1: 3
+  channels_2: 6
   kernel: 3
   maxpool_kernel: 2
-  linear_hidden: 64
+  linear_hidden: 6
   dropout_1: 0.25
   dropout_2: 0.5
 
 training:
   # Core algoritmic settings
   aggregation: fedavg
-  clients: 50
+  clients: 40
   communication_rounds: 20
   local_epochs: 20
   clients_per_round: 20
-  local_data_amount: 1000
+  local_data_amount: 1500
   max_time: 1000000000
 
   # Optimisation arguments
@@ -24,7 +24,7 @@ training:
   lr: 0.0005
 
   # Dataset settings
-  dataset: cifar10
+  dataset: mnist
   split: dirichlet
   alpha: 1
 

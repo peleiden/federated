@@ -23,7 +23,8 @@ class ClientTrainer:
 
         get_data = get_cifar10 if self.train_cfg["dataset"] == "cifar10" else get_mnist
         self.train_dataset = get_data(data_path or DATA_PATH, train=True)
-        self.test_dataset = get_data(data_path or DATA_PATH, train=False)
+        if self.train_cfg["local_eval"]:
+            self.test_dataset = get_data(data_path or DATA_PATH, train=False)
         image_shape = self.train_dataset[0][0].shape
         output_size = len(self.train_dataset.classes)
 
@@ -53,7 +54,8 @@ class ClientTrainer:
         local_dataloader = get_dataloader(
             self.train_dataset, self.train_cfg["batch_size"], split
         )
-        local_test_dataloader = get_dataloader(self.test_dataset, self.train_cfg["batch_size"])
+        if self.train_cfg["local_eval"]:
+            local_test_dataloader = get_dataloader(self.test_dataset, self.train_cfg["batch_size"])
 
         accs, losses, train_accs = list(), list(), list()
 
