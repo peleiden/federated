@@ -3,6 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 from pelutils.ds.plot import figsize_std, update_rc_params, rc_params
 
 from src.models.train_federated import Results
@@ -19,13 +20,15 @@ def plot_args():
     results = [results[i] for i in argsort]
     train_cfgs = [train_cfgs[i] for i in argsort]
 
-    plt.figure(figsize=figsize_std)
+    ax = plt.figure(figsize=figsize_std).gca()
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     for result, cfg in zip(results, train_cfgs):
         eval_times = np.array(result.eval_timestamps) - result.eval_timestamps[0]
-        plt.plot(eval_times, result.test_accuracies, "-o", label=cfg["local_epochs"])
+        plt.plot(eval_times/60, result.test_accuracies, "-o", label="%i local epochs" % cfg["local_epochs"])
     plt.grid()
+    plt.title("Convergence by time and local epochs")
     plt.legend()
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time [min]")
     plt.ylabel("Test accuracy [%]")
     plt.ylim([-5, 105])
     plt.tight_layout()

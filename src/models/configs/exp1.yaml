@@ -1,10 +1,10 @@
 
 model:
-  channels_1: 4
-  channels_2: 8
+  channels_1: 16
+  channels_2: 32
   kernel: 3
   maxpool_kernel: 2
-  linear_hidden: 8
+  linear_hidden: 64
   dropout_1: 0.25
   dropout_2: 0.5
 
@@ -15,16 +15,16 @@ training:
   communication_rounds: 20
   local_epochs: 20
   clients_per_round: 20
-  local_data_amount: 500
+  local_data_amount: 1250
   max_time: 1000000000
 
   # Optimisation arguments
-  batch_size: 16
+  batch_size: 32
   lr_gamma: 0.995
   lr: 0.0005
 
   # Dataset settings
-  dataset: mnist
+  dataset: cifar10
   split: dirichlet
   alpha: 1
 
