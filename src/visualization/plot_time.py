@@ -30,7 +30,7 @@ def plot_args():
     plt.legend()
     plt.xlabel("Time [min]")
     plt.ylabel("Test accuracy [%]")
-    plt.ylim([-5, 105])
+    plt.ylim([-5, 65])
     plt.tight_layout()
     plt.savefig("plots/time.png")
     plt.close()
