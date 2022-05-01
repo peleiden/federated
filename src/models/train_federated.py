@@ -30,6 +30,7 @@ USE_WANDB = "WANDB_OFF" not in os.environ
 
 @dataclass
 class Results(DataStorage):
+    ignore_missing=True
     # Training configuration
     cfg: dict
     start_args: dict
