@@ -70,9 +70,10 @@
 %
 \begin{abstract}
     Federated Learning (FL) is emerging as a essential mechanism for assuring user privacy in large-scale machine learning (ML) \cite{kai2021advances}.
-    To capture the characteristics of FL methods, the unique setup of aggregating models from a federation of disjoint devices must be simulated realistically.
-    Seeking to investigate the resulting practical issues, we install 20 Raspberry Pi's in an experimental configuration for FL over physical clients.
-    We setup experiments with hyperparameters in the FedAvg \cite{mcmahan2017communication} algorithm including the number of local device epochs for which we identify a trade-off between spending time on communication and on local computation.
+    Important use-cases of this learning paradigm run on a federation of real-world user devices, but often in the literature, FL is simulated in an artificial computing cluster environment \cite{kai2021advances,mcmahan2017communication,lin2020ensemble}.
+    Seeking to capture the unique FL problems and trade-offs when running on physical hardware, we install a network of 20 Raspberry Pi's acting as user devices.
+    Using this experimental setup, we perform an empirical study of the influence of key hyperparameters the FedAvg \cite{mcmahan2017communication} algorithm.
+    For the number of local device epochs, the physical timings allow us to identify a trade-off between spending time on communication and on local computation.
     Testing robustness both against imbalanced data across devices and the addition of rogue, noisy clients, we highlight the potential of using stronger aggregation schemes than averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
 \end{abstract}
 %
@@ -85,9 +86,9 @@
 Large-scale surveys have shown that the growing use of Artificial Intelligence (AI) has resulted in a widespread fear about loss of personal privacy \cite{beuc2020consumers, west2018survey}.
 As a part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases such as Siri, Google Chrome and Gboard \cite{kai2021advances}.
 
-FL covers the ML setup where multiple clients collaborate in learning from local data across clients which is not exchanged and a central server aggregates updates \cite{kai2021advances, mcmahan2017communication}.
-When the aggregation corresponds to the average over weights from models each produced by training multiple local epochs on each client, the algorithm is the formative \emph{FedAvg}\cite{mcmahan2017communication}.
-Many further aggregation methods exist, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}, and we refer to Kairouz et al. for an overview \cite{kai2021advances}.
+The term FL covers the distributed ML setup where multiple clients collaborate in learning from local datasets which are not exchanged and where a central server aggregates updates \cite{kai2021advances, mcmahan2017communication}.
+When the aggregation is performed by iteratively averaging weights from models each produced by training for a number local epochs on each client, the resulting FL algorithm is the formative \emph{FedAvg}\cite{mcmahan2017communication}.
+To gain faster convergence and better data imbalance robustness, further aggregation methods have been developed, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}, and we refer to Kairouz et al. for an overview of the field\cite{kai2021advances}.
 
 Across this rich literature, many benchmarks of FL performance over algorithmic choices exist, but are often performed by simulating the federation on central compute clusters.
 In this project, we seek to capture the unique hardware setup of FL use-cases such as smartphones where a number of computationally weak edge devices hold the data.
