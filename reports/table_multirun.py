@@ -9,7 +9,7 @@ from texttable import Texttable
 from latextable import draw_latex
 from src.models.train_federated import Results
 
-NAMES = dict(alpha=r"Class balance ($\alpha$)", clients_per_round="Clients sampled", noisy_clients="Noisy clients", local_epochs="Local epochs")
+NAMES = dict(alpha=r"class balance ($\alpha$)", clients_per_round="clients sampled", noisy_clients="noisy clients", local_epochs="local epochs")
 
 def results_and_cfgs(path: str):
     jobs = os.listdir(path)
@@ -17,6 +17,7 @@ def results_and_cfgs(path: str):
     return res, [r.cfg.configs.training for r in res]
 
 def table_over_arg():
+    M, S, V, U = list(), list(), list(), list()
     for var in os.listdir():
         if var == "iid":
             continue
@@ -29,18 +30,34 @@ def table_over_arg():
             values = np.concatenate((values, ["iid"]*len(r2)))
         perfs = np.array([r.test_accuracies[-1] for r in results])
         uniques = np.unique(values)
-        means = np.array([np.mean(perfs[values == v]) for v in uniques])
-        stds = np.array([np.std(perfs[values == v], ddof=1) for v in uniques])
-
-        t = Texttable()
-        t.set_deco(t.HEADER)
-        header = (NAMES[var], *[str(x) for x in uniques])
-        t.header(header)
-        t.add_row(["Test acc. [\%]"] + [f"${m:.1f}"r" \pm " + f"{s:.1f}$" for m, s in zip(means, stds)])
-        t.draw()
-        out = draw_latex(t, caption="", label=f"tab:{var}")
-        print(out)
-
+        M.append(np.array([np.mean(perfs[values == v]) for v in uniques]))
+        S.append(np.array([np.std(perfs[values == v], ddof=1) for v in uniques]))
+        V.append(var)
+        U.append(uniques)
+    start, end =\
+r"""
+\begin{table}[htb!]
+    \centering
+\resizebox{\linewidth}{!}{
+    \begin{tabular}""",\
+r"""\end{tabular}}
+    \caption{
+    Test accuracy [\%] of final models using FedAvg over $K=40$ clients when running for $L=20$ local epochs.
+    Each run is repeated five times with an approximate 95\%\ confidence interval suggested.
+    }
+    \label{tab:main}
+\end{table}"""
+    r = max(x.size for x in M)
+    mc = lambda x : r"        \multicolumn{"+f"{r}"+r"}{c}{"+f"{x}"+r"}\\" + "\n"
+    s = start + "{" f"{'l'*r}" "}\n"
+    s += r"       \hline""\n"
+    for means, stds, var, uniques in zip(M, S, V, U):
+        s += mc("Varying "+ NAMES[var])
+        s += "        "+ " & ".join(f"{x}" for x in uniques) + r" \\" + "\n"
+        s += r"       \hline""\n"
+        s += "        "+" & ".join(f"${m:.1f}"r" \pm " + f"{1.96 / len(stds)**0.5 * s:.1f}$" for m, s in zip(means, stds)) + r" \\" + "\n"
+    s += end
+    print(s)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
