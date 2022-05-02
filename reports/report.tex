@@ -203,35 +203,38 @@ All experiments used the baseline listed in Table \ref{tab:baseline} except for 
 \section{RESULTS}%
 \label{sec:results}
 Table \ref{tab:main} shows the results of different parameter choices using FedAvg after $L=20$ communication rounds.
+% Redigér ikke tabel direkte, men redigér table_multirun.py
 \begin{table}[htb!]
     \centering
-\resizebox{\linewidth}{!}{
-    \begin{tabular}{rrrrr}
+    \begin{tabular}{llll}
        \hline
-        \multicolumn{5}{c}{Clients sampled ($S$)}\\
+        \multicolumn{4}{c}{Local epochs ($E$)}\\
+        1 & 10 & 20 & 40 \\
+       \hline
+        $48.0 \pm 0.9$ & $52.2 \pm 2.0$ & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
+        \multicolumn{4}{c}{Clients sampled ($S$)}\\
         5 & 10 & 20 & 40 \\
        \hline
-        $53.7 \pm 1.3$ & $55.0 \pm 0.4$ & $56.5 \pm 0.6$ & $57.4 \pm 0.6$ \\
-        \multicolumn{5}{c}{Class balance ($\alpha$)}\\
+        $35.4 \pm 4.8$ & $37.4 \pm 2.6$ & $38.1 \pm 2.0$ & $38.1 \pm 2.5$ \\
+        \multicolumn{4}{c}{Class balance ($\alpha$)}\\
         0.01 & 1.0 & 100.0 & iid \\
        \hline
-        $34.8 \pm 3.3$ & $55.4 \pm 0.8$ & $57.4 \pm 0.4$ & $68.6 \pm 0.4$ \\
-        \multicolumn{5}{c}{Noisy clients ($N_K$)}\\
-        0 & 10 & 20 & 30 & 40 \\
+        $10.3 \pm 0.6$ & $36.7 \pm 2.4$ & $42.6 \pm 3.4$ & $43.4 \pm 2.5$ \\
+        \multicolumn{4}{c}{Noisy clients ($N_K$)}\\
+        0 & 10 & 20 & 30 \\
        \hline
-        $55.9 \pm 0.5$ & $53.1 \pm 1.2$ & $45.3 \pm 2.1$ & $26.4 \pm 6.1$ & $10.1 \pm 0.5$ \\
-        \multicolumn{5}{c}{Local epochs ($E$)}\\
-        1 & 10 & 20 & 40 & 80 \\
-       \hline
-        $47.1 \pm 0.9$ & $56.6 \pm 0.7$ & $56.3 \pm 0.6$ & $55.9 \pm 0.5$ & $54.1 \pm 0.5$ \\
-\end{tabular}}
+        $37.1 \pm 1.3$ & $14.0 \pm 2.1$ & $10.3 \pm 0.4$ & $10.6 \pm 0.8$ \\
+\end{tabular}
     \caption{
-    TODO: NOT FINAL NUMBERS
-    Test accuracy [\%] of final models using FedAvg.
-    Each run is repeated five times with an approximate 95 \%\ confidence interval suggested.
+    Final test accuracies [\%] of FedAvg models over $K=40$ clients after training for $L=20$ communication rounds.
+    Each run is repeated five times to produce an approximate 95\%\ confidence interval.
     }
     \label{tab:main}
 \end{table}
+
+
+
+
 Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the four experiments run on the Raspberry Pi setup.
 \begin{figure}[htb!]
     \centering
