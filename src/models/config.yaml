@@ -1,2 +1,7 @@
 defaults:
   - configs: exp1
+
+hydra:
+    sweep:
+        dir: /work3/s183911/federated/${now:%Y-%m-%d}/${now:%H-%M-%S}
+        subdir: ${hydra.job.num}

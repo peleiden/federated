@@ -11,6 +11,7 @@ from torch.functional import Tensor
 from src.data.make_dataset import DATA_PATH, get_dataloader, get_mnist, get_cifar10
 from src.data.split_dataset import DirichletUnbalanced, EqualIIDSplit
 from src.models.architectures.conv import SimpleConv
+from src.models.train_model import evaluate
 
 
 class ServerTrainer:
@@ -47,8 +48,10 @@ class ServerTrainer:
             self.distil_dataloader = get_dataloader(
                 get_cifar10(DATA_PATH, train=True, cifar100=True), self.train_cfg["distil"]["batch_size"],
             )
+            self.distil_test_dataloader = get_dataloader(
+                get_cifar10(DATA_PATH, train=False, cifar100=True), self.train_cfg["distil"]["batch_size"],
+            )
             self.distil_criterion = torch.nn.KLDivLoss(reduction="batchmean")
-            self.distil_optimizer = torch.optim.Adam(self.model.parameters(), lr=self.train_cfg["distil"]["lr"])
 
         log("Applying %.4f %% noise to %i clients" % (100 * self.train_cfg.noisy_images, self.train_cfg.noisy_clients))
         self.noisy_clients = set(np.random.choice(np.arange(self.train_cfg.clients), size=self.train_cfg.noisy_clients, replace=False))
@@ -114,10 +117,39 @@ class ServerTrainer:
         self.fed_avg(received_models)
 
         # Run distillation
-        for i, (data, _) in enumerate(self.distil_dataloader):
-            self.distil_optimizer.zero_grad()
-            if i == self.train_cfg["distil"]["steps"]:
-                break
+        distil_optimizer = torch.optim.Adam(self.model.parameters(), lr=self.train_cfg["distil"]["lr"])
+        distil_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(distil_optimizer, self.train_cfg["distil"]["steps"])
+        batch_iter = iter(self.distil_dataloader)
+        last_eval = float("inf")
+        for i in range(self.train_cfg["distil"]["steps"]):
+            # Run distillation evaluation
+            if not i % self.train_cfg["distil"]["eval_every"]:
+                self.model.eval()
+                eval_loss = 0
+                with torch.no_grad():
+                    for data, _  in self.distil_test_dataloader:
+                        data = data.to(self.device)
+                        teacher_logits = torch.stack([teacher(data) for teacher in teachers])
+                        target_probs = F.softmax(teacher_logits.mean(0), dim=-1)
+                        preds = F.log_softmax(self.model(data), dim=-1)
+                        eval_loss += self.distil_criterion(preds, target_probs).item()/len(data)
+
+                log("Distillation Eval Loss {}: {:.9f}".format(i, eval_loss/len(self.distil_test_dataloader)))
+                self.model.train()
+                if eval_loss > last_eval:
+                    log("Distillation plateau: Aborting procedure")
+                    break
+                last_eval = eval_loss
+
+            # Get training data
+            try:
+                data, _ = next(batch_iter)
+            except StopIteration:
+                batch_iter = iter(self.distil_dataloader)
+                data, _ = next(batch_iter)
+
+            # Run distillation update
+            distil_optimizer.zero_grad()
             data = data.to(self.device)
             with torch.no_grad():
                 teacher_logits = torch.stack([teacher(data) for teacher in teachers])
@@ -126,6 +158,6 @@ class ServerTrainer:
 
             loss = self.distil_criterion(preds, target_probs)
             loss.backward()
-            self.distil_optimizer.step()
-
-            log.debug("Distillation Loss {}: {:.4f}".format(i, loss.item()/len(data)))
+            distil_optimizer.step()
+            distil_scheduler.step()
+            log.debug("Distillation Loss {}: {:.9f}".format(i, loss.item()/len(data)))
