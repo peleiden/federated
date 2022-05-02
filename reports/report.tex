@@ -6,6 +6,7 @@
 \documentclass{article}
 \usepackage{amsmath,graphicx,02460}
 \usepackage{amssymb}
+\usepackage{bm}
 
 \usepackage[dvipsnames]{xcolor}
 
@@ -108,7 +109,7 @@ The aim of the project is to investigate the impact of FedAvg hyperparameters on
 
 \subsection{FL Methods}
 We implemented FL by setting up $K$ clients each with a disjoint partition of the full training dataset.
-A global model $\mathcal M_G$ was initialized and maintained on the central server, and for $L$ iterations, dubbed communication rounds, $S \leq K$ clients were sampled, each receiving a copy of the model.
+A global model $\mathcal M_G$ was initialized and maintained on the central server, and for $L$ iterations, dubbed communication rounds, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
 On each client, $E$ local epochs of gradient-based minibatch learning of the local dataset were performed before returning the updated model $\mathcal M_k$ to the server.
 
 For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for next communication round.
@@ -123,39 +124,53 @@ For FedAvg, the server aggregated the $S$ returned models by averaging over all 
 \end{figure}\noindent
 
 \subsection{Physical Devices}
-The project setup, shown at Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1GB memory and a quad-core 1.2GHz CPU.
+The project setup, shown on Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
 Crucially, the Pi's were located on a network separate from the HPC to simulate more realistic communication overhead.
 The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model.
 The code was designed to not require physical devices, so experiments without physical timings interest could be run on an NVIDIA A100 for faster training time and a reduced power bill.
 
-Every Pi ran a Flask server that receiving a model every communication round and returning the trained local model along with telemetry data such as memory usage, which is an important consideration when running on such resource-limited devices.
+Every Pi ran a Flask server that received $\mathcal M_G^{(l)}$ every communication round $l$ and returned the trained local model along with telemetry data such as memory usage, which was an important consideration when running on such resource-limited devices.
 The Flask server also had a route for sending commands to allow for primitive over-the-air-update functionality.
 The Pi's were made accessible to the HPC using port-forwarding.
 
-This implementations stored the entire training dataset on each physical device, making it possible to simulate more than 20 clients ($K > 20$) as long as no more than 20 clients were sampled each round ($S \leq 20$).
+This implementation stored the entire training dataset on each physical device, making it possible to simulate more than 20 clients ($K > 20$) as long as no more than 20 clients were sampled each round ($S \leq 20$).
 
-Each Pi was connected to a switch, which in turn is connected via cable to the router.
-If the switches were turned off, the Pi's connect to the router via Wi-Fi, which allows for testing the impact of communication overhead in two cases: under relatively fast ethernet and relatively slow Wi-Fi.
-For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilized on ethernet, but only about 40\pro\ utilized on Wi-Fi.
+Each Pi was connected to a switch, which in turn was connected via cable to the router.
+If the switches were turned off, the Pi's connected to the router via Wi-Fi, which allows for testing the impact of communication overhead in two cases: under relatively fast ethernet and relatively slow Wi-Fi.
+For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilized on ethernet, but only about 40\pro\ on Wi-Fi.
 
 \subsection{Deep Learning Problem}
 For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes including bird, cat and airplane \cite{alex2009learning}.
-Due to device memory limits, all images were grayscaled.
+Due to device memory limits, all images were greyscaled.
 
-The training dataset containing 50K images of 10 equally sized classes.
-For the model $\mathcal M$, we chose a small convolutional neural network known to be able to achieving high performance on the simpler CV task, MNIST \cite{chollet2015keras}.
-The network has 406,922 trainable parameters and is described in Appendix \ref{app:model}.
-
+The training dataset contains 50K images of 10 equally common classes.
+For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers.
 
 Optimization for the $E$ local epochs on each device was performed by using the Adam optimizer \cite{kingma2015adam} with a learning rate of $\eta_1 = 5\cdot 10^{-4}$ and a batch size of 16.
 The learning rate was lowered each local epoch to $\eta_{t+1} = 0.995\cdot \eta_{t}$.
 
 \subsection{Data Imbalance and Noise}
-\begin{enumerate}
-    \item Dirichlet
-    \item Noise approach
-\end{enumerate}
+\subsubsection{Dirichlet sampling}
+The training data was evenly divided into $K$ pieces among all the clients.
+A simple way to distribute data is to scramble and divide it into $K$ contiguous chunks, which would make the label distribution within each client uniform in the limit.
 
+However, in practice, such balance in the dataset cannot be assumed.
+In order to simulate varying levels of label balance, the Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, was used.
+Here, $\bm\alpha$ is a 10 long vector with every $\alpha_i$ corresponding to a label.
+Furthermore, we let every $\alpha_i=\alpha$ be the same value.
+Every sample $\bm\pi\sim\operatorname{Dir}(\bm\alpha)$ will be a probability distribution over labels, the uniformity of which is directly determined by $\alpha$.
+For $\alpha\to0$, one label dominates, where as for $\alpha\to\infty$, $\bm\pi$ will be increasingly uniform.
+Pleasingly, for $\alpha=1$, every possible $\bm\pi$ is equally likely.
+
+$\bm\pi$ was sampled for every client, making the label distribution Dirichlet for every client.
+However, this will cause some labels to be oversampled and some undersampled.
+A property of $\bm\pi$ is that reordering it still makes it follow the same distribution.
+$\bm\pi$ is thus reordered for each client, until a mostly even label distribution across all devices is achieved, no matter the level of balance within devices.
+
+\subsubsection{Noisy data}
+Noise can be added to the data by randomly replacing labels.
+This is controlled by two parameters; $N_K$ is the number of noisy clients, and $p$ is the fraction of randomly replaced labels within each noisy client.
+For simplicity, $p=1$ is always used.
 
 \subsection{Evaluation}
 \begin{enumerate}
