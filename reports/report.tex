@@ -180,23 +180,17 @@ The experiments regarding clients sampled and local epochs are repeated on Raspb
 Furthermore, the experiments regarding class balance and noisy clients are repeated using the FedDF algorithm.
 
 All experiments used the baseline listed in Table \ref{tab:baseline} except for the parameter varied in each experiment.
+These were chosen based on existing literature, in particular \cite{mcmahan2017communication,lin2020ensemble}, and on small pilot experiments.
 
 \begin{table}[htb!]
     \centering
-    \begin{tabular}{lr}
-        Parameter & Value\\\hline
-        $K$&40\\
-        $S$&20\\
-        $\alpha$&1\\
-        $E$&20\\
-        $L$&20\\
-        $N_K$&0\\
-        Batch size&16\\
-        $\eta$&$5\ctp{-4}$\\
-        $\gamma$&0.995
+    \begin{tabular}{ccccccccc}
+        $K$ & $S$ & $\alpha$ & $E$ & $L$ & $N_K$ & $B$ & $\eta$ & $\gamma$\\
+        \hline
+        40 & 20 & 1 & 20 & 20 & 0 & 16 & $5\ctp{-4}$ & $0.995$
     \end{tabular}
     \caption{Baseline parameters used for all experiments.
-        The values were based on pilot experiments.}
+        Here, $B$ refers to the training batch size.}
     \label{tab:baseline}
 \end{table}
 
@@ -232,9 +226,6 @@ Table \ref{tab:main} shows the results of different parameter choices using FedA
     \label{tab:main}
 \end{table}
 
-
-
-
 Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the four experiments run on the Raspberry Pi setup.
 \begin{figure}[htb!]
     \centering
@@ -255,12 +246,20 @@ Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the 
 
 \section{DISCUSSION}%
 \label{sec:discussion}
+\begin{enumerate}
+    \item Add comments to Raspberry Pi Experiments: Use very short time on clients per round, but focus on local epochs.
+        Comment on the fact that long-term behaviour is overfitting and more local epochs => more overfit.
+        MAINLY: Focus the trade-off in number of local epochs in the first 20 minutes, where, especially on WiFi, 10 and 20 local epochs show their worth as there is more computation time.
+    \item To talk about overfitting, use Figure \ref{fig:accuracy} or \ref{fig:accuracy2} and be amazed that FedAvg handles local overfitting so well.
+    \item Comment on class balance and noisy clients using the repeated table numbers (wait for Fed-DF to finish before doing this).
+    \item Discuss how realistic setup is.
+\end{enumerate}
 \begin{figure}[htb!]
     \centering
-        \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
+        \includegraphics[width=\linewidth]{imgs/accuracyE10.pdf}
     \caption{
-        TODO: CHANGE TO BETTER EXPERIMENT WITH 10 LOCAL EPOCHS (IF WE CAN AGREE)
-        A training trajectory when recording running accuracies on each client in each communication round ehere each faint line correspond to $E=20$ local epochs performances of each of the $S=20$ sampled clients.
+        A training trajectory when recording running accuracies on each client in each communication round where each faint line correspond to $E=10$ local epochs performances of each of the $S=20$ sampled clients.
+        For the baseline $E=20$ case, see Appendix Figure \ref{fig:accuracy2}.
     }
     \label{fig:accuracy}
 \end{figure}\noindent
@@ -312,6 +311,18 @@ The model architecture is described below, listing the sequential operations in 
 
 \subsection{Sampling Algorithm}%
 \label{app:diralg}
+
+\section{Further Result Plots}%
+
+\begin{figure}[htb!]
+    \centering
+        \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
+    \caption{
+        A version of \ref{fig:accuracy} with $E=20$.
+        We note that the high value of local epochs results in a global model which is overfitting.
+    }
+    \label{fig:accuracy2}
+\end{figure}\noindent
 
 
 
