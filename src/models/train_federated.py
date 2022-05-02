@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-from telnetlib import COM_PORT_OPTION
 import time
+import traceback as tb
 from dataclasses import dataclass
 from threading import Thread
 from typing import Generator, Optional, OrderedDict
@@ -183,13 +183,20 @@ def ping_telemetry(ips: list[str], num_clients: int, results: Results):
     current_client = 0
     while _ping_telemetry:
         log.debug("Requesting telemetry from client %i" % current_client)
-        response = requests.get(f"http://{ips[current_client]}:{3080+current_client}/telemetry")
-        if response.status_code != 200:
-            raise IOError("Device %i returned status code %i\nError: %s" % (current_client, response.status_code, response.content))
+        try:
+            response = requests.get(f"http://{ips[current_client]}:{3080+current_client}/telemetry")
+            if response.status_code != 200:
+                raise IOError("Device %i returned status code %i\nError: %s" % (current_client, response.status_code, response.content))
+        except:
+            log("Failed to get telemetry from device %i" % current_client, "Stacktrace", tb.format_exc())
+            current_client = (current_client + 1) % num_clients
+            time.sleep(0.1)
+            continue
         results.telemetry[current_client]["timestamp"].append(time.time())
         results.telemetry[current_client]["memory_usage"].append(json.loads(response.content)["data"]["total-memory-usage-pct"])
         log.debug("Device %i reported %.2f %% memory usage" % (current_client, results.telemetry[current_client]["memory_usage"][-1]))
         current_client = (current_client + 1) % num_clients
+        time.sleep(0.1)
 
 def reset_all_devices(ips: list[str], num_clients: int):
     if not ips:
