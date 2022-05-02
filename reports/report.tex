@@ -152,26 +152,23 @@ The learning rate was lowered each local epoch to $\eta_{t+1} = 0.995\cdot \eta_
 \subsection{Data Imbalance and Noise}
 \subsubsection{Dirichlet sampling}
 The training data was evenly divided into $K$ pieces among all the clients.
-A simple way to distribute data is to scramble and divide it into $K$ contiguous chunks, which would make the label distribution within each client uniform in the limit.
+A simple way to distribute data is to scramble and divide it into $K$ contiguous chunks, which would make the label distribution on each client approximately uniform.
 Following the literature, we denote this distribution scheme iid. \cite{lin2020ensemble}
 
-However, in practice, such balance in the dataset cannot be assumed.
-In order to simulate varying levels of label balance, the Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, was used.
-Here, $\bm\alpha$ is a 10 long vector with every $\alpha_i$ corresponding to a label.
-Furthermore, we let every $\alpha_i=\alpha$ be the same value.
-Every sample $\bm\pi\sim\operatorname{Dir}(\bm\alpha)$ will be a probability distribution over labels, the uniformity of which is directly determined by $\alpha$.
-For $\alpha\to0$, one label dominates, where as for $\alpha\to\infty$, $\bm\pi$ will be increasingly uniform.
-Pleasingly, for $\alpha=1$, every possible $\bm\pi$ is equally likely.
+However, in practice, such balance in the dataset can rarely be assumed in FL setting \cite{kai2021advances}.
+In order to simulate varying levels of imbalance, the Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, was used.
+The length of the parameter vector  $\bm\alpha$ corresponds to the number of labels, 10, and we let $\alpha_i=\alpha$.
+Every sample $\bm\pi\sim\operatorname{Dir}(\bm\alpha)$ is a probability distribution over labels and $\alpha$ determines the uniformity of this distribution.
+For $\alpha\to0$, one label dominates, where as for $\alpha\to\infty$, $\bm\pi$ will be increasingly uniform, as exemplified in Appendix \ref{app:dirplots}.
+For $\alpha=1$, every possible $\bm\pi$ is equally likely.
 
 $\bm\pi$ was sampled for every client, making the label distribution Dirichlet for every client.
-However, this will cause some labels to be oversampled and some undersampled.
-A property of $\bm\pi$ is that reordering it still makes it follow the same distribution.
-$\bm\pi$ is thus reordered for each client, until a mostly even label distribution across all devices is achieved, no matter the level of balance within devices.
+To keep the client datasets disjoint while using a maximal part of the total dataset, we created and used a client-balancing Dirichlet sampling algorithm described in Appendix \ref{app:diralg}.
 
 \subsubsection{Noisy data}
-Noise can be added to the data by randomly replacing labels.
-This is controlled by two parameters; $N_K$ is the number of noisy clients, and $p$ is the fraction of randomly replaced labels within each noisy client.
-For simplicity, $p=1$ is always used.
+To simulate the fact that some user devices can be unreliable, we tested the concept of noisy clients.
+The training data on a noisy client had all labels replaced with randomly chosen classes, removing all signal.
+We tested performance over the number of noisy clients $N_K\leq K$ to test for robustness against erroneous or even adversarial clients.
 
 \subsection{Evaluation}
 We perform experiments to test the effects of four variables: The number of clients sampled ($S$), the class balance (as controlled by $\alpha$ or iid.), the number of noisy clients ($N_K$), and the number of local epochs ($E$).
@@ -246,6 +243,25 @@ The model architecture is described below, listing the sequential operations in 
             Linear w. bias & 64 feature in, 10 features out
         \end{tabular}
 \end{table}\noindent
+\section{The Dirichlet Distribution For Data Imbalance}
+\subsection{Impact of Dirichlet $\alpha$}%
+\label{app:dirplots}
+\begin{figure}[htb!]
+    \centering
+        \includegraphics[width=0.49\linewidth]{imgs/splits(alpha=0.01)}
+        \includegraphics[width=0.49\linewidth]{imgs/splits(alpha=1).pdf}
+        \includegraphics[width=0.49\linewidth]{imgs/splits(alpha=100)}
+        \includegraphics[width=0.49\linewidth]{imgs/splits(IID)}
+    \caption{
+        Example 10-class label distributions over 50 clients for each of the tested sampling paradigms, where each colour corresponds to a label and each row to a client.
+    }
+    \label{fig:splits}
+\end{figure}\noindent
+
+
+\subsection{Sampling Algorithm}%
+\label{app:diralg}
+
 
 
 
