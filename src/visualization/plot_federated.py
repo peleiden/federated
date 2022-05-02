@@ -5,7 +5,7 @@ import shutil
 
 from matplotlib.ticker import MaxNLocator
 from pelutils import log
-from pelutils.ds.plot import figsize_wide, update_rc_params, rc_params
+from pelutils.ds.plot import figsize_std, figsize_wide, update_rc_params, rc_params, tab_colours
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -21,8 +21,19 @@ def plot_accuracy():
 
     local_epochs = train_cfg.local_epochs
     comm_rounds = np.arange(len(res.test_accuracies))
+    SMALL_SIZE = 32
+    MEDIUM_SIZE = 36
+    BIGGER_SIZE = 40
 
-    ax = plt.figure(figsize=figsize_wide).gca()
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+    ax = plt.figure(figsize=figsize_std).gca()
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     try:
@@ -43,20 +54,26 @@ def plot_accuracy():
     plt.plot(
         comm_rounds,
         res.test_accuracies,
-        "-o",
+        "-",
         label="Global test accuracy",
+        color=tab_colours[0],
+        lw=3,
+        ms=4
     )
     if any(x > 100 for x in res.pct_noisy_images_by_round):
         plt.plot(comm_rounds[1:], res.pct_noisy_images_by_round, "-o", label="% noisy images")
 
-    plt.title("Accuracy")
+
+
+    plt.title("Local, Global Model Accuracies")
     plt.xlabel("Communication rounds")
     plt.ylabel("Accuracy [%]")
-    plt.ylim([-5, 105])
+    plt.ylim([10, 115])
+    plt.xticks(np.arange(21, step=5))
     plt.grid()
     plt.legend()
     plt.tight_layout()
-    plt.savefig("plots/accuracy.png")
+    plt.savefig("plots/accuracy.pdf")
     plt.close()
 
 def plot_memory():

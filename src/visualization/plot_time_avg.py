@@ -13,10 +13,21 @@ from src.models.train_federated import Results
 update_rc_params(rc_params)
 
 def plot_args(type: str, var: str):
-    pretty_var = var.replace("_", " ")
+    pretty_var = var.replace("_", " ").title()
 
     values = [x[len(type):] for x in os.listdir() if x.startswith(type)]
     values = sorted(values)
+    SMALL_SIZE = 32
+    MEDIUM_SIZE = 36
+    BIGGER_SIZE = 40
+
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
     ax = plt.figure(figsize=figsize_std).gca()
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     lns = list()
@@ -58,7 +69,7 @@ def plot_args(type: str, var: str):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("location")
-    parser.add_argument("type", choices=("ethernet", "wifi"))
+    parser.add_argument("type", choices=("Ethernet", "WiFi"))
     args = parser.parse_args()
     os.chdir(args.location)
     os.makedirs("plots", exist_ok=True)
