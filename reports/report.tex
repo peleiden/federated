@@ -116,7 +116,9 @@ On each client, $E$ local epochs of gradient-based minibatch learning of the loc
 
 For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for next communication round.
 
-% TODO: FedDF
+\begin{enumerate}
+    \item TODO: Fed-DF. This is currently subject to change depending on the results
+\end{enumerate}
 
 \begin{figure}[ht!]
     \centering
@@ -224,6 +226,7 @@ Table \ref{tab:main} shows the results of different parameter choices using FedA
         $47.1 \pm 0.9$ & $56.6 \pm 0.7$ & $56.3 \pm 0.6$ & $55.9 \pm 0.5$ & $54.1 \pm 0.5$ \\
 \end{tabular}}
     \caption{
+    TODO: NOT FINAL NUMBERS
     Test accuracy [\%] of final models using FedAvg.
     Each run is repeated five times with an approximate 95 \%\ confidence interval suggested.
     }
