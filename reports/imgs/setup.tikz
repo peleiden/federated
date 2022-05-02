@@ -1,0 +1,19 @@
+\begin{tikzpicture}[scale=.9,auto=center,every node/.style={circle}]
+
+\tikzstyle{client}=[fill=blue!20];
+\tikzstyle{server}=[fill=red!20,style=rectangle];
+\tikzstyle{t}=[fill=red!0];
+
+\node[server] (s) at (0,0) {HPC server};  
+\node[client] (c1) at (-3.5,2)  {Pi $1$}; 
+\node[t] (te) at (0, 2) {$\ldots$};
+\node[client] (c2) at (3.5,2)  {Pi $20$};  
+
+\path[->] (s) edge[very thick, bend left=20] node[midway, fill=white] {\footnotesize $\mathcal M_G^{(l)}$} (c1);
+\path[->] (s) edge[very thick, bend right=20] node[midway, fill=white] {\footnotesize $\mathcal M_G^{(l)}$} (c2);
+
+\path[->] (c1) edge[very thick, bend left=20] node[midway, fill=white] {\footnotesize $\mathcal M_{k_1}^{(l)}$} (s); 
+\path[->] (c2) edge[very thick, bend right=20] node[midway, fill=white] {\footnotesize $\mathcal M_{k_{20}}^{(l)}$} (s); 
+
+
+\end{tikzpicture}
