@@ -258,6 +258,7 @@ Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the 
     \item Comment on class balance and noisy clients using the repeated table numbers (wait for Fed-DF to finish before doing this).
     \item Discuss how realistic setup is.
 \end{enumerate}
+In general, these results show that model convergence is possible even though data is federated across devices, which is substantiated by the fact that running the $E=1$ experiment for longer resulted in a test performance plateau of 95\pro\ of centralised perfomance on this task; see Appendix Table \ref{app:centralised} for details.
 \begin{figure}[htb!]
     \centering
         \includegraphics[width=\linewidth]{imgs/accuracyE10.pdf}
@@ -317,7 +318,7 @@ Se Figure \ref{fig:splits} for illustration of varying degrees of data imbalance
 \subsection{Sampling Algorithm}%
 \label{app:diralg}
 
-\section{Further Result Plots}%
+\section{Further Results}%
 
 \begin{figure}[htb!]
     \centering
@@ -328,6 +329,22 @@ Se Figure \ref{fig:splits} for illustration of varying degrees of data imbalance
     }
     \label{fig:accuracy2}
 \end{figure}\noindent
+
+\begin{table}[htb!]
+    \centering
+        \begin{tabular}{lll}
+            Algorithm & Steps before convergence & Final accuracy\\
+            \hline
+            FedAvg & 200 comm. rounds & 62.1 \%\\
+            Centralised & 10 full epochs & 65.3
+        \end{tabular}
+    \caption{
+        Test set accuracy when running the above learning algorithms until test set accuracy stopped improving for 3 steps.
+        The used FedAvg algorithm used $E=1$ and otherwise baseline parameters presented in \ref{tab:baseline}.
+        The centralised learning algorithm used the full training each epoch, but otherwise same optimization approach as FL.
+    }
+    \label{app:centralised}
+\end{table}\noindent
 
 
 
