@@ -82,8 +82,8 @@
     Federated Learning (FL) is emerging as a essential mechanism for assuring user privacy in large-scale machine learning (ML) \cite{kai2021advances}.
     Important use-cases of this learning paradigm run on a federation of real-world user devices, but often in the literature, FL is simulated in an artificial computing cluster environment \cite{kai2021advances,mcmahan2017communication,lin2020ensemble}.
     Seeking to capture the unique FL problems and trade-offs when running on physical hardware, we install a network of 20 Raspberry Pi's acting as user devices.
-    Using this experimental setup, we perform an empirical study of the influence of key hyperparameters the FedAvg \cite{mcmahan2017communication} algorithm.
-    For the number of local device epochs, the physical timings allow us to identify a trade-off between spending time on communication and on local computation.
+    Using this experimental setup, we perform an empirical study of the influence of key hyperparameters of the FedAvg \cite{mcmahan2017communication} algorithm.
+    For choosing the number of local epochs on clients, the physical timings allow us to identify a trade-off between spending time on communication and on local computation.
     Testing robustness both against imbalanced data across devices and the addition of rogue, noisy clients, we highlight the potential of using stronger aggregation schemes than averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
 \end{abstract}
 %
@@ -104,14 +104,14 @@ To gain faster convergence and better data imbalance robustness, further aggrega
 Across this rich literature, many benchmarks of FL performance over algorithmic choices exist, but are often performed by simulating the federation on central compute clusters.
 In this project, we seek to capture the unique hardware setup of FL use-cases such as smartphones where a number of computationally weak edge devices hold the data.
 This is performed by performing local training of a convolutional neural network (CNN) on 20 Raspberry Pi devices over which CIFAR-10 \cite{alex2009learning} is divided, and aggregating these centrally using FedAvg.
-The aim of the project is to investigate the impact of FedAvg hyperparameters on convergence time, analyze aggregation robustness against imbalanced and noisy data, and uncover performance bottlenecks and tradeoffs in the physical hardware setting.
+The aim of the project is to investigate the impact of FedAvg hyperparameters including number of clients per communication round and local epochs on convergence time, analyze aggregation robustness against imbalanced and noisy data, and uncover performance bottlenecks and tradeoffs in the physical hardware setting.
 
 \section{METHODS}%
 \label{sec:methods}
 
 \subsection{FL Methods}
 We implemented FL by setting up $K$ clients each with a disjoint partition of the full training dataset.
-A global model $\mathcal M_G$ was initialized and maintained on the central server, and for $L$ iterations, dubbed communication rounds, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
+A global model $\mathcal M_G$ was initialized and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
 On each client, $E$ local epochs of gradient-based minibatch learning of the local dataset were performed before returning the updated model $\mathcal M_k$ to the server.
 
 For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for next communication round.
@@ -137,7 +137,8 @@ Every Pi ran a Flask server that received $\mathcal M_G^{(l)}$ every communicati
 The Flask server also had a route for sending commands to allow for primitive over-the-air-update functionality.
 The Pi's were made accessible to the HPC using port-forwarding.
 
-This implementation stored the entire training dataset on each physical device, making it possible to simulate more than 20 clients ($K > 20$) as long as no more than 20 clients were sampled each round ($S \leq 20$).
+The Raspberry Pi setup able was designed to be able to run experiments where $K > 20$, that is maintaining more than 20 clients, each corresponding to a partition of the dataset, as long as no more than 20 clients were sampled each round ($S \leq 20$).
+This was done by storing the entire dataset on each device and assigning each device to a client number, and thus a data partition, each communication round.
 
 Each Pi was connected to a switch, which in turn was connected via cable to the router.
 If the switches were turned off, the Pi's connected to the router via Wi-Fi, which allows for testing the impact of communication overhead in two cases: under relatively fast ethernet and relatively slow Wi-Fi.
@@ -148,17 +149,15 @@ For an example learning problem, we chose the CIFAR-10 computer vision (CV) task
 Due to device memory limits, all images were greyscaled.
 
 The training dataset contains 50K images of 10 equally common classes.
-For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers.
+For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers which is further detailed in Appendix \ref{app:model}.
 
 Optimization for the $E$ local epochs on each device was performed by using the Adam optimizer \cite{kingma2015adam} with a learning rate $\eta$, which was decayed every local epoch: $\eta\leftarrow\gamma\eta, \gamma\le 1$.
 
 \subsection{Data Imbalance and Noise}
 \subsubsection{Dirichlet sampling}
-The training data was evenly divided into $K$ pieces among all the clients.
-A simple way to distribute data is to scramble and divide it into $K$ contiguous chunks, which would make the label distribution on each client approximately uniform.
-Following the literature, we denote this distribution scheme iid. \cite{lin2020ensemble}
+The total training dataset was into $K$ evenly sized partitions among all the clients.
 
-However, in practice, such balance in the dataset can rarely be assumed in FL setting \cite{kai2021advances}.
+In practical, dataset class balance can rarely be assumed in FL setting \cite{kai2021advances}.
 In order to simulate varying levels of imbalance, the Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, was used.
 The length of the parameter vector  $\bm\alpha$ corresponds to the number of labels, 10, and we let $\alpha_i=\alpha$.
 Every sample $\bm\pi\sim\operatorname{Dir}(\bm\alpha)$ is a probability distribution over labels and $\alpha$ determines the uniformity of this distribution.
@@ -167,6 +166,8 @@ For $\alpha=1$, every possible $\bm\pi$ is equally likely.
 
 $\bm\pi$ was sampled for every client, making the label distribution Dirichlet for every client.
 To keep the client datasets disjoint while using a maximal part of the total dataset, we created and used a client-balancing Dirichlet sampling algorithm described in Appendix \ref{app:diralg}.
+
+As a comparative baseline, we also simulate random partitions and denote this distribution scheme iid. following literature \cite{lin2020ensemble}.
 
 \subsubsection{Noisy data}
 To simulate the fact that some user devices can be unreliable, we tested the concept of noisy clients.
