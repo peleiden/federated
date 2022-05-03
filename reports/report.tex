@@ -11,6 +11,7 @@
 \usepackage[dvipsnames]{xcolor}
 
 \usepackage{pgf,tikz}
+\usepackage{pgf-pie}
 \usetikzlibrary{arrows}
 \usetikzlibrary{decorations.markings}
 
@@ -123,7 +124,7 @@ For FedAvg, the server aggregated the $S$ returned models by averaging over all 
 \begin{figure}[ht!]
     \centering
     \input{imgs/setup.tikz}
-    \caption{The federated setup performing updates at communication round $l$ where Raspberry Pi 1 trains a local model as client $k_1$ and Pi 20 trains as client $k_{20}$.}
+    \caption{Our federated setup performing updates at communication round $l$ where Raspberry Pi 1 trains a local model on data partition $k_1$ (thus for round $l$, this device simulates client $k_1$) and Pi 20 trains as client $k_{20}$.}
     \label{fig:setup}
 \end{figure}\noindent
 

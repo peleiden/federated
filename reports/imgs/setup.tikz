@@ -9,11 +9,37 @@
 \node[t] (te) at (0, 2) {$\ldots$};
 \node[client] (c2) at (3.5,2)  {Pi $20$};  
 
+
+
 \path[->] (s) edge[very thick, bend left=20] node[midway, fill=white] {\footnotesize $\mathcal M_G^{(l)}$} (c1);
 \path[->] (s) edge[very thick, bend right=20] node[midway, fill=white] {\footnotesize $\mathcal M_G^{(l)}$} (c2);
 
 \path[->] (c1) edge[very thick, bend left=20] node[midway, fill=white] {\footnotesize $\mathcal M_{k_1}^{(l)}$} (s); 
 \path[->] (c2) edge[very thick, bend right=20] node[midway, fill=white] {\footnotesize $\mathcal M_{k_{20}}^{(l)}$} (s); 
+
+\pie[color={
+    yellow!20,
+    green!20,
+    teal!20,
+},
+pos={-2.5,2.5},
+radius=0.4,
+hide number,
+hide label]{25/L1, 30/L2, 45/L3};
+\node (t1) at (-3.5, 2.75) {\footnotesize Data $k_1$};
+
+\pie[color={
+    yellow!20,
+    green!20,
+    teal!20,
+},
+pos={2.5,2.5},
+radius=0.4,
+hide number,
+hide label]{60/L1, 27/L2, 13/L3};
+
+\node (t2) at (3.5, 2.75) {\footnotesize Data $k_{20}$};
+
 
 
 \end{tikzpicture}
