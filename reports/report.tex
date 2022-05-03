@@ -118,11 +118,11 @@ The project aims to investigate the impact of FedAvg hyperparameters, including 
 \end{figure}\noindent
 
 \subsection{FL Methods}
-We implemented FL by setting up $K$ clients each with a disjoint partition of the full training dataset.
-A global model $\mathcal M_G$ was initialized and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
-On each client, $E$ local epochs of gradient-based minibatch learning of the local dataset were performed before returning the updated model $\mathcal M_k$ to the server.
+We implemented FL by setting up $K$ clients with a disjoint partition of the complete training dataset.
+A global model, $\mathcal M_G$, was initialized and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
+Each client's $E$ local epochs of gradient-based minibatch learning of the local dataset were performed before returning the updated model $\mathcal M_k$ to the server.
 
-For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for next communication round.
+For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round.
 
 For an alternative aggregation method, we implemented the FedDF algorithm where the model weight averaging of FedAvg is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
 Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^(l + 1)$ was produced by distilling the $S$ local models $\mathcal M_{k_i}$ for $10^4$ batch updates against a Kulback-Leibler  divergence criterion with a batch size of $128$.
@@ -131,28 +131,28 @@ The CIFAR-100 dataset was used for distillation \cite{alex2009learning}.
 
 
 \subsection{Physical Devices}
-The project setup, shown on Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
-Crucially, the Pi's were located on a network separate from the HPC to simulate more realistic communication overhead.
+The project setup, shown in Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
+Crucially, the Pi's were located on a network separate from the HPC to simulate a more realistic communication overhead.
 The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model.
-The code was designed to not require physical devices, so experiments without physical timings interest could be run on an NVIDIA A100 for faster training time and a reduced power bill.
+The code was designed not to require physical devices, so experiments without physical timing limitations could be run on an NVIDIA A100 for faster training time and a reduced power bill.
 
 Every Pi ran a Flask server that received $\mathcal M_G^{(l)}$ every communication round $l$ and returned the trained local model along with telemetry data such as memory usage, which was an important consideration when running on such resource-limited devices.
-The Flask server also had a route for sending commands to allow for primitive over-the-air-update functionality.
+The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
 The Pi's were made accessible to the HPC using port-forwarding.
 
-The Raspberry Pi setup able was designed to be able to run experiments where $K > 20$, that is maintaining more than 20 clients, each corresponding to a partition of the dataset, as long as no more than 20 clients were sampled each round ($S \leq 20$).
-This was done by storing the entire dataset on each device and assigning each device to a client number, and thus a data partition, each communication round.
+The Raspberry Pi setup able was designed to be able to run experiments where $K > 20$, that is, maintaining more than 20 clients, each corresponding to a partition of the dataset, as long as no more than 20 clients were sampled each round ($S \leq 20$).
+This was done by storing the entire dataset on each device and assigning each device to a client number, corresponding to a unique data partition of the complete dataset.
 
-Each Pi was connected to a switch, which in turn was connected via cable to the router.
+ Pi was connected to a switch, which was connected via cable to the router.
 If the switches were turned off, the Pi's connected to the router via Wi-Fi, which allows for testing the impact of communication overhead in two cases: under relatively fast ethernet and relatively slow Wi-Fi.
 For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilized on ethernet, but only about 40\pro\ on Wi-Fi.
 
 \subsection{Deep Learning Problem}
-For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes including bird, cat and airplane \cite{alex2009learning}.
+For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes, including bird, cat and airplane \cite{alex2009learning}.
 Due to device memory limits, all images were greyscaled.
 
-The training dataset contains 50K images of 10 equally common classes.
-For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers which is further detailed in Appendix \ref{app:model}.
+The training dataset contains 50K iages of 10 equally common (distributed?) classes.
+For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers, which is further detailed in Appendix \ref{app:model}.
 
 Optimization for the $E$ local epochs on each device was performed by using the Adam optimizer \cite{kingma2015adam} with a learning rate $\eta$, which was decayed every local epoch: $\eta\leftarrow\gamma\eta, \gamma\le 1$.
 
@@ -160,7 +160,7 @@ Optimization for the $E$ local epochs on each device was performed by using the 
 \subsubsection{Dirichlet sampling}
 The total training dataset was into $K$ evenly sized partitions among all the clients.
 
-In practical, dataset class balance can rarely be assumed in FL setting \cite{kai2021advances}.
+In practice, dataset class balance can rarely be assumed in FL setting \cite{kai2021advances}.
 In order to simulate varying levels of imbalance, the Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, was used.
 The length of the parameter vector  $\bm\alpha$ corresponds to the number of labels, 10, and we let $\alpha_i=\alpha$.
 Every sample $\bm\pi\sim\operatorname{Dir}(\bm\alpha)$ is a probability distribution over labels and $\alpha$ determines the uniformity of this distribution.
