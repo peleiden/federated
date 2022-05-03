@@ -15,7 +15,7 @@ update_rc_params(rc_params)
 def plot_args(type: str, var: str):
     pretty_var = var.replace("_", " ").title()
 
-    values = [x[len(type):] for x in os.listdir() if x.startswith(type)]
+    values = [x[len(type):] for x in os.listdir() if x.startswith(type.lower())]
     values = sorted(values)
     SMALL_SIZE = 32
     MEDIUM_SIZE = 36
@@ -32,8 +32,8 @@ def plot_args(type: str, var: str):
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     lns = list()
     for i, value in enumerate(values):
-        jobs = os.listdir(f"{type}{value}")
-        results = [Results.load(f"{type}{value}/{j}/0") for j in jobs]
+        jobs = os.listdir(f"{type.lower()}{value}")
+        results = [Results.load(f"{type.lower()}{value}/{j}/0") for j in jobs]
 
         times = [np.array(result.eval_timestamps)-min(result.eval_timestamps) for result in results]
         min_time = min(t.max() for t in times)
