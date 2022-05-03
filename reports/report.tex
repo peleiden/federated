@@ -368,20 +368,41 @@ Similarly, standard deviation or the reciprocal of the entropy could be used.
 
 The final thing to keep in mind before the algorithm is introduced is that reordering $\bm\pi_i$ makes it equally likely to be sampled from $ \operatorname{Dir}(\alpha) $.
 
-The algorithm changes the ordering within each $\bm\pi_i$ iteratively, until $u$ converges.
+The algorithm changes the ordering within each $\bm\pi_i$ iteratively, until $u(\mathbf P)$ is no longer lowered.
+The full algorithm is shown with pseudocode in Algorithm \ref{alg:dir}.
 \begin{algorithm}
 \caption{Dirichlet sampling algorithm}
+\label{alg:dir}
 \begin{algorithmic}
 \For{$i$ from 1 to $C$}\Comment{Initialize $\mathbf P$}
     \State $\mathbf P_i \gets \operatorname{Dir}(\alpha)$
 \EndFor
-\State $u_{\text{current}} \gets u(\mathbf P)$
-\State $u_{\text{previous}} \gets \infty$
-\While{$u_{\text{current}} < u_{\text{previous}}$}
-    \State stuff
-\EndWhile
+\Loop
+    \State{$d \gets $ Map()}\Comment{Map swaps to $u$ values}
+    \For{$i$ from 1 to $C$}\Comment{Do all possible swaps}
+        \ForAll{$(j_1, j_2)\in (1\ldots l)\times (1\ldots l), j_1\neq j_2$}
+            \State{Swap $P_{ij_1}$ and $ P_{ij_2} $}
+            \State{$ d[ (i, j_1, j_2) ] \gets u(\mathbf P)$ }
+            \State{Swap $P_{ij_1}$ and $ P_{ij_2} $ back}
+        \EndFor
+    \EndFor
+    \If{$\min(d) < u(\mathbf P)$}
+        \State $ i, j_1, j_2 \gets \operatorname{argmin}(d) $
+        \State{Swap $P_{ij_1}$ and $ P_{ij_2} $}
+    \Else
+        \State{Break}\Comment{No improvement possible}
+    \EndIf
+\EndLoop
+\State{$ \bm\pi \gets \sum_{i=1}^{C} \bm\pi_i $}
+\State{$ \mathbf P \gets \mathbf P / \max(\bm\pi) $}
+\Comment{Normalize $\mathbf P$ by most sampled label}
 \end{algorithmic}
 \end{algorithm}
+The final $\mathbf P$ produced by the algorithm is normalized such that all data points with the most sampled labels are used exactly once.
+
+In general, labels were found to be sampled more evenly for higher values of $C$ and $\alpha$.
+Running the algorithm for $C=100$ and $\alpha=0.01$ 100 times showed an average undersampling of less than 1\pro\ with the largest undersampling being 3.3\pro.
+Only rarely was any one label undersampled by more than 5\pro, a testament to the strength of the algorithm, even for a low value of $\alpha$.
 
 \section{Further Results}%
 
