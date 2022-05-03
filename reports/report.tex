@@ -6,6 +6,8 @@
 \documentclass{article}
 \usepackage{amsmath,graphicx,02460}
 \usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{bm}
 
 \usepackage[dvipsnames]{xcolor}
@@ -256,6 +258,25 @@ Table \ref{tab:main} shows the results repeated experiments investigating differ
     }
     \label{tab:main}
 \end{table}
+
+Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the four experiments run on the Raspberry Pi setup.
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_Ethernet.pdf}
+    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_WiFi.pdf}
+    \caption{Effect of the number of local epochs using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
+    The lines show the mean accuracy of three repetitions, while the shaded areas outline the at any time best and worst of the repetitions.}
+    \label{fig:rpi-local-epochs}
+\end{figure}\noindent
+    \begin{figure}[htb!]
+    \centering
+    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_Ethernet.pdf}
+    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_WiFi.pdf}
+    \caption{Effect of the number of clients per round using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
+    See Figure \ref{fig:rpi-local-epochs} for further description.}
+    \label{fig:rpi-clients-per-round}
+\end{figure}\noindent
+
 \section{DISCUSSION}%
 \label{sec:discussion}
 Firstly, these results show that model convergence is possible even though data is federated across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to in 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
@@ -327,6 +348,40 @@ Se Figure \ref{fig:splits} for illustration of varying degrees of data imbalance
 
 \subsection{Sampling Algorithm}%
 \label{app:diralg}
+Let $D$ denote a dataset of size $\len D$ with $l$ different labels, of which there are $\len D/l$ each.
+The goal of the algorithm is to divide the dataset among $C$ clients, such that the label distribution, $\bm\pi_i$ of each client $i$, follows the same Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, where every $\alpha_j\in\bm\alpha, j=1\ldots l$ is the same value.
+For simplicity, the Dirichlet distribution will therefore be parametrized only by $\alpha$; $\operatorname{Dir}(\alpha)$.
+
+The distributions are structured into a matrix $\mathbf P$ of size $ C\times l $, where the $i$'th row is $\bm\pi_i$.
+The $ij$'th element, $P_{ij}$, is then the fraction of label $j$ on device $i$.
+Furthermore, the sum of the $j$'th column is the relative usage of label $j$ scaled by the number of clients, $C$.
+As such, for every label to be used equally much, every column should sum to $C/l$.
+If any columns sum to more, the corresponding labels are oversampled, and so all of $\bm P$ needs to be normalized to make the largest column-sum equal $C/l$, causing some of the data to not be used.
+
+A measure, $u$, is needed to determine how close $\mathbf P$ is to achieving the goal of making every column sum to the same.
+The lowest value of this measure should be achieved for a $\mathbf P$ where every column sums to $C/l$, while it should be progressively higher for poorer $\mathbf P$'s.
+We choose the L1 norm of difference in column sums and $C/l$:
+\begin{equation*}
+    u(\mathbf P) = \sum_{j=1}^{l} \len{\frac{C}{l} - \sum_{i=1}^{C} P_{ij}}
+\end{equation*}
+Similarly, standard deviation or the reciprocal of the entropy could be used.
+
+The final thing to keep in mind before the algorithm is introduced is that reordering $\bm\pi_i$ makes it equally likely to be sampled from $ \operatorname{Dir}(\alpha) $.
+
+The algorithm changes the ordering within each $\bm\pi_i$ iteratively, until $u$ converges.
+\begin{algorithm}
+\caption{Dirichlet sampling algorithm}
+\begin{algorithmic}
+\For{$i$ from 1 to $C$}\Comment{Initialize $\mathbf P$}
+    \State $\mathbf P_i \gets \operatorname{Dir}(\alpha)$
+\EndFor
+\State $u_{\text{current}} \gets u(\mathbf P)$
+\State $u_{\text{previous}} \gets \infty$
+\While{$u_{\text{current}} < u_{\text{previous}}$}
+    \State stuff
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
 
 \section{Further Results}%
 
