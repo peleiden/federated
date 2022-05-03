@@ -262,6 +262,8 @@ Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the 
 
 \section{DISCUSSION}%
 \label{sec:discussion}
+Firstly, these results show that model convergence is possible even though data is federated across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to in 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
+
 \begin{enumerate}
     \item Add comments to Raspberry Pi Experiments: Use very short time on clients per round, but focus on local epochs.
         Comment on the fact that long-term behaviour is overfitting and more local epochs => more overfit.
@@ -270,7 +272,7 @@ Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the 
     \item Comment on class balance and noisy clients using the repeated table numbers (wait for Fed-DF to finish before doing this).
     \item Discuss how realistic the setup is.
 \end{enumerate}
-In general, these results show that model convergence is possible even though data is federated across devices, which is substantiated by the fact that is running the $E=1$ experiment for longer resulted in a test performance plateau of 95\pro\ of centralised performance on this task; see Appendix Table \ref{app:centralised} for details.
+
 \begin{figure}[htb!]
     \centering
         \includegraphics[width=\linewidth]{imgs/accuracyE10.pdf}
