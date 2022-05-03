@@ -96,16 +96,16 @@
 \section{INTRODUCTION}
 \label{sec:intro}
 Large-scale surveys have shown that the growing use of Artificial Intelligence (AI) has resulted in a widespread fear about loss of personal privacy \cite{beuc2020consumers, west2018survey}.
-As a part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases such as Siri, Google Chrome and Gboard \cite{kai2021advances}.
+As a part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases such as Siri, Google Chrome, and Gboard \cite{kai2021advances}.
 
 The term FL covers the distributed ML setup where multiple clients collaborate in learning from local datasets which are not exchanged and where a central server aggregates updates \cite{kai2021advances, mcmahan2017communication}.
-When the aggregation is performed by iteratively averaging weights from models each produced by training for a number local epochs on each client, the resulting FL algorithm is the formative \emph{FedAvg} \cite{mcmahan2017communication}.
-To gain faster convergence and better data imbalance robustness, further aggregation methods have been developed, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}, and we refer to Kairouz et al. for an overview of the field\cite{kai2021advances}.
+When the aggregation is performed by iteratively averaging weights from models, each produced by training for several local epochs on each client, the resulting FL algorithm is the formative \emph{FedAvg} \cite{mcmahan2017communication}.
+To gain faster convergence and better data imbalance robustness, additional aggregation methods have been developed, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}, and we refer to Kairouz et al. for an overview of the field\cite{kai2021advances}.
 
-Across this rich literature, many benchmarks of FL performance over algorithmic choices exist, but are often performed by simulating the federation on central compute clusters.
+Across this rich literature, many benchmarks of FL performance over algorithmic choices exist but are often performed by simulating the federation on central compute clusters.
 In this project, we seek to capture the unique hardware setup of FL use-cases such as smartphones where a number of computationally weak edge devices hold the data.
-This is performed by performing local training of a convolutional neural network (CNN) on 20 Raspberry Pi devices over which CIFAR-10 \cite{alex2009learning} is divided, and aggregating these centrally using FedAvg.
-The aim of the project is to investigate the impact of FedAvg hyperparameters including number of clients per communication round and local epochs on convergence time, analyze aggregation robustness against imbalanced and noisy data, and uncover performance bottlenecks and tradeoffs in the physical hardware setting.
+This is performed by performing local training of a convolutional neural network (CNN) on 20 Raspberry Pi devices over which CIFAR-10 \cite{alex2009learning} is divided and aggregating these centrally using FedAvg.
+The project aims to investigate the impact of FedAvg hyperparameters, including the number of clients per communication round and local epochs on convergence time, analyze aggregation robustness against imbalanced and noisy data, and uncover performance bottlenecks and tradeoffs in the physical hardware setting.
 
 \section{METHODS}%
 \label{sec:methods}
