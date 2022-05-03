@@ -26,7 +26,7 @@ pos={-2.5,2.5},
 radius=0.4,
 hide number,
 hide label]{25/L1, 30/L2, 45/L3};
-\node (t1) at (-3.5, 2.75) {\footnotesize Data $k_1$};
+\node (t1) at (-3.5, 2.75) {\footnotesize Data $k^{(l)}_1$};
 
 \pie[color={
     yellow!20,
@@ -38,7 +38,7 @@ radius=0.4,
 hide number,
 hide label]{60/L1, 27/L2, 13/L3};
 
-\node (t2) at (3.5, 2.75) {\footnotesize Data $k_{20}$};
+\node (t2) at (3.5, 2.75) {\footnotesize Data $k^{(l)}_{20}$};
 
 
 
