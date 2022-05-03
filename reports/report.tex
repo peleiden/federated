@@ -184,7 +184,7 @@ The experiments regarding clients sampled and local epochs are repeated on Raspb
 Furthermore, the experiments regarding class balance and noisy clients are repeated using the FedDF algorithm.
 
 All experiments used the baseline listed in Table \ref{tab:baseline} except for the parameter varied in each experiment.
-These were chosen based on existing literature, in particular, \cite{mcmahan2017communication,lin2020ensemble}, and on small pilot experiments.
+These were chosen based on existing literature, in particular, \cite{mcmahan2017communication,lin2020ensemble}, and limited pilot experimentation.
 
 \begin{table}[htb!]
     \centering
@@ -200,7 +200,25 @@ These were chosen based on existing literature, in particular, \cite{mcmahan2017
 
 \section{RESULTS}%
 \label{sec:results}
-Table \ref{tab:main} shows the results of different parameter choices using FedAvg after $L=20$ communication rounds.
+Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the four experiments run on the Raspberry Pi setup.
+Note that these experiments are limited by time and have thus run different numbers of communication rounds.
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_ethernet.pdf}
+    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_wifi.pdf}
+    \caption{Effect of the number of local epochs ($E$) using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
+    The lines show the mean accuracy of three repetitions, while the shaded areas outline the at any time best and worst of the repetitions.}
+    \label{fig:rpi-local-epochs}
+\end{figure}\noindent
+    \begin{figure}[htb!]
+    \centering
+    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_ethernet.pdf}
+    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_wifi.pdf}
+    \caption{Effect of the number of clients per round ($S$) using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom) with formatting as in Figure \ref{fig:rpi-local-epochs}.}
+    \label{fig:rpi-clients-per-round}
+\end{figure}\noindent
+
+Table \ref{tab:main} shows the results repeated experiments investigating different parameter choices using FedAvg after $L=20$ communication rounds.
 % Redigér ikke tabel direkte, men redigér table_multirun.py
 \begin{table}[htb!]
     \centering
@@ -238,28 +256,6 @@ Table \ref{tab:main} shows the results of different parameter choices using FedA
     }
     \label{tab:main}
 \end{table}
-
-
-
-
-Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the four experiments run on the Raspberry Pi setup.
-\begin{figure}[htb!]
-    \centering
-    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_ethernet.pdf}
-    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_wifi.pdf}
-    \caption{Effect of the number of local epochs using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
-    The lines show the mean accuracy of three repetitions, while the shaded areas outline the at any time best and worst of the repetitions.}
-    \label{fig:rpi-local-epochs}
-\end{figure}\noindent
-    \begin{figure}[htb!]
-    \centering
-    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_ethernet.pdf}
-    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_wifi.pdf}
-    \caption{Effect of the number of clients per round using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
-    See Figure \ref{fig:rpi-local-epochs} for further description.}
-    \label{fig:rpi-clients-per-round}
-\end{figure}\noindent
-
 \section{DISCUSSION}%
 \label{sec:discussion}
 Firstly, these results show that model convergence is possible even though data is federated across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to in 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
