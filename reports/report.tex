@@ -80,12 +80,12 @@
 \maketitle
 %
 \begin{abstract}
-    Federated Learning (FL) is emerging as a essential mechanism for assuring user privacy in large-scale machine learning (ML) \cite{kai2021advances}.
+    Federated Learning (FL) is emerging as an essential mechanism for assuring user privacy in large-scale machine learning (ML) \cite{kai2021advances}.
     Important use-cases of this learning paradigm run on a federation of real-world user devices, but often in the literature, FL is simulated in an artificial computing cluster environment \cite{kai2021advances,mcmahan2017communication,lin2020ensemble}.
     Seeking to capture the unique FL problems and trade-offs when running on physical hardware, we install a network of 20 Raspberry Pi's acting as user devices.
     Using this experimental setup, we perform an empirical study of the influence of key hyperparameters of the FedAvg \cite{mcmahan2017communication} algorithm.
-    For choosing the number of local epochs on clients, the physical timings allow us to identify a trade-off between spending time on communication and on local computation.
-    Testing robustness both against imbalanced data across devices and the addition of rogue, noisy clients, we highlight the potential of using stronger aggregation schemes than averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
+    For choosing the number of local epochs on clients, the physical timings allow us to identify a trade-off between time spent on communication and local computation.
+    Testing robustness against imbalanced data across devices and the addition of rogue, noisy clients, we highlight the potential of using stronger aggregation schemes than averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
 \end{abstract}
 %
 \begin{keywords}
