@@ -139,7 +139,7 @@ The Raspberry Pi setup was able to run experiments where $K > 20$, that is, main
 This was done by storing all $K$ client datasets on each device and for every communication round $l$, assigning Raspberry Pi's to train on each of the $S$ sampled client datasets.
 
 The Pi's were connected to a switch connected via cable to the router.
-If the switch was turned off, the Pi's connected to the router via Wi-Fi, which allowed for testing the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
+When turning off the switch, the Pi's connected instead via Wi-Fi, allowing tests of the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
 For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilised on Ethernet, but only about 40\pro\ on Wi-Fi.
 
 \begin{figure}[htb!]
@@ -305,7 +305,7 @@ Empirical prediction probability distributions might thus give a more robust cha
     \centering
          \includegraphics[width=\linewidth]{imgs/feddf-alpha.pdf}
     \caption{
-    Performance of the global model on the test set over communication rounds when varying data imbalance using both FedAvg (left) and FedDF.
+    Performance of the global model on the test set over communication rounds when varying data imbalance using both FedAvg (left) and FedDF (right).
     The lines indicate the mean performance of multiple runs, with the coloured areas outlining the least and most performant repetition at any run.
     The FedAvg experiments were repeated five times, with the much slower FedDF experiments only being run twice.
     }
