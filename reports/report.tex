@@ -156,7 +156,6 @@ For an example learning problem, we chose the CIFAR-10 computer vision (CV) task
 Due to device memory limits, all images were greyscaled.
 The training dataset contains 50K images of 10 equally numbered classes.
 
-The training dataset contains 50K images of 10 equally numbered classes.
 For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers, which is further detailed in Appendix \ref{app:model}.
 
 Optimization for the $E$ local epochs on each device was performed by using the Adam optimizer \cite{kingma2015adam} with a learning rate $\eta$, which was decayed every local epoch: $\eta\leftarrow\gamma\eta, \gamma\le 1$.
@@ -258,6 +257,14 @@ $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
     }
     \label{tab:main}
 \end{table}
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=\linewidth]{imgs/alphas.pdf}
+    \includegraphics[width=\linewidth]{imgs/S.pdf}
+    \caption{Top: Performance of the global model on the test at different communication rounds with varying label sampling parameters. Bottom: Same plot, but with varying number of clients sampled per round, $S$.
+    The lines indicate the mean performance of five runs, with the coloured areas outlining the least and most performant repetition at any run.}
+    \label{fig:alpha-s}
+\end{figure}\noindent
 
 \section{DISCUSSION}%
 \label{sec:discussion}
@@ -271,8 +278,7 @@ $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
     }
     \label{fig:accuracy}
 \end{figure}\noindent
-
-Firstly, the results show that model convergence is possible even though data is federated across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to in 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
+Firstly, the results show that model convergence is possible even though data is distributed across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to in 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
 
 From Raspberry Pi experiments on Figure \ref{fig:rpi-local-epochs}, we initially note that many accuracy curves fall during much of the learning.
 This is continually worse with more local epochs.
@@ -282,18 +288,18 @@ An obvious mitigation is to perform a structured hyperparameter search where bet
 A more general idea is to perform local early stopping, but designing such a rule is non-trivial as we observe examples of the global, average model improving even though all local models overfit as seen in early rounds and during the less biased learning for $E=10$ shown on Appendix Figure \ref{fig:accuracy2}.
 
 When focusing on early learning less impacted by overfitting, the Raspberry Pi timing results reveal that it does not directly hold that fewer local epochs are better.
-If training time is limited, more local epochs might be optimal, as seen in minutes 5 to 15 using Ethernet, and all the way to minute 40 for Wi-Fi.
+If training time is limited, more local epochs can be optimal, as seen in minutes 5 to 15 using Ethernet, and all the way to minute 40 for Wi-Fi.
 During this time, the higher number of local epochs result in more time spent on training and less on communication, explaining why the slow communicating Wi-Fi results show this effect more strongly.
 There thus exists a trade-off where $E$ should not be too high to induce overfitting but not too low to slow down the rate of training data seen.
-In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies.
+In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies, as well as the peculiarities of their specific setup.
 
 When running for a fixed number of rounds as shown in Table \ref{tab:main}, computational and communicational effects are disregarded and $E=10$ appears optimally as a compromise between under- and overfitting.
 For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ($\alpha=1$), FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
-Even using only 5 clients each round, the final accuracy reached $93 \pro$ of using all 40, emphasizing the stability of the model averaging.
-\textcolor{red}{
-TODO: Add plot that shows that fewer clients sampled means slower convergence.  Probably in appendix.
-}
+Even using only 5 clients each round, the accuracy ended at $93 \pro$ of using all 40, emphasizing the stability of model averaging.
+Figure \ref{fig:alpha-s}, showing the performance over the global model at different communication rounds under different values of $S$, highlights this; lower $S$ mostly hurts training in the early communication rounds, with performance differences barely being distinguishable in later rounds.
+
 However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$ where significant learning did not occur, while training on more balanced classification tasks such as $\alpha=100$ or iid. sampling results in convergence to significantly better performance.
+This is plainly shown on Figure \ref{fig:alpha-s}.
 
 For the FedDF experiment with the same hyperparameters, much better performance is noted.
 We speculate that the distillation procedure avoids the detrimental impact of the overfitted local models by performing a model fusion without averaging over large, bias-inducing parameters.
@@ -415,7 +421,7 @@ The final $\mathbf P$ produced by the algorithm is normalized such that all data
 
 In general, labels were found to be sampled more evenly for higher values of $C$ and $\alpha$.
 Running the algorithm for $C=100$ and $\alpha=0.01$ 100 times showed an average undersampling of less than 1\pro\ with the largest undersampling being 3.3\pro.
-Only rarely was any one label undersampled by more than 5\pro, a testament to the strength of the algorithm, even for a low value of $\alpha$.
+Only rarely was any one label undersampled by more than 5\pro, a sign of the strength of the algorithm, even for a low value of $\alpha$.
 
 \section{Further Results}%
 
