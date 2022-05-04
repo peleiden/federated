@@ -84,17 +84,17 @@
 
 \begin{abstract}
     Federated Learning (FL) is emerging as an essential mechanism for assuring user privacy in large-scale machine learning (ML) \cite{kai2021advances}.
-    Important use-cases of this learning paradigm run on a federation of real-world user devices, but often in the literature, FL is simulated in an artificial computing cluster environment \cite{kai2021advances,mcmahan2017communication,lin2020ensemble}.
+    Important use-cases of this learning paradigm run on a federation of real-world user devices, but in the literature, FL is often simulated in an artificial computing cluster environment \cite{kai2021advances,mcmahan2017communication,lin2020ensemble}.
     Seeking to capture the unique FL problems and trade-offs when running on physical hardware, we set up 20 Raspberry Pi's acting as user devices.
     Using this experimental setup, we perform an empirical study of the influence of key hyperparameters of the FedAvg \cite{mcmahan2017communication} algorithm.
-    For choosing the number of local epochs on clients, the physical timings allow us to identify a trade-off between time spent on communication and local computation.
-    Testing robustness against imbalanced data across the clients and noisy data, we highlight the potential of using stronger aggregation schemes than averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
+    In the case of the number of local epochs on clients, the physical timings allow us to identify a trade-off between time spent on communication and local computation.
+    Testing robustness against imbalanced data across the clients and noisy data, we highlight the potential of using stronger aggregation schemes than weight averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
 \end{abstract}
 
 \section{INTRODUCTION}
 \label{sec:intro}
-Large-scale surveys have shown that the growing use of Artificial Intelligence (AI) has resulted in a widespread fear about loss of personal privacy \cite{beuc2020consumers, west2018survey}.
-As part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases such as Siri, Google Chrome, and Gboard \cite{kai2021advances}.
+Large-scale surveys have shown that the growing use of Artificial Intelligence (AI) has resulted in a widespread fear of loss of personal privacy \cite{beuc2020consumers, west2018survey}.
+As part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases including Siri, Google Chrome, and Gboard \cite{kai2021advances}.
 
 The term FL covers distributed ML setups where multiple clients collaborate in learning from local datasets which are not exchanged and where a central server aggregates local updates \cite{kai2021advances, mcmahan2017communication}.
 Aggregation by iteratively averaging weights from models, each produced by training for several local epochs on each client, is known as the formative \emph{FedAvg} \cite{mcmahan2017communication} algorithm.
@@ -104,7 +104,7 @@ We refer to Kairouz et al. for an overview of the field \cite{kai2021advances}.
 Across this rich literature, many benchmarks of FL performance over algorithmic choices exist but are often performed by simulating the federation on central compute clusters \cite{lin2020ensemble}.
 In this project, we seek to capture the unique hardware setup of FL use-cases such as smartphones, where a number of computationally weak edge devices hold the data.
 This is achieved by performing local training of a convolutional neural network (CNN) on 20 Raspberry Pi devices over which CIFAR-10 \cite{alex2009learning} is divided and aggregating these locally trained models centrally using FedAvg.
-The project aims to investigate the impact of FedAvg hyperparameters, including the number of clients per communication round and local epochs on convergence time, analyse aggregation robustness against imbalanced and noisy data, and uncover performance bottlenecks and trade-offs in the physical hardware setting.
+The project aims to investigate the impact of FedAvg hyperparameters, including the number of clients per communication round and local epochs on convergence time, analyse aggregation robustness against imbalanced and noisy data, and uncover performance trade-offs in the physical hardware setting.
 
 \section{METHODS}%
 \label{sec:methods}
@@ -114,20 +114,20 @@ We implemented FL by setting up $K$ clients each with a disjoint training datase
 A global model, $\mathcal M_G$, was initialised and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
 Each client performed $E$ local epochs of learning before returning the updated local model $\mathcal M_k$ to the server.
 
-For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round, minimizing an implicit objective function $f$ of model weights $\mathbf w$ when using loss $\ell$
+In FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round, minimizing an implicit objective function $f$ of model weights $\mathbf w$ when using loss function $\ell$:
 \begin{equation*}
     f(\mathbf w) = \sum_{k=1}^K \frac{n_k}{n_{\text{total}}} F_k(\mathbf w),\ \ 
     F_k(\mathbf w) = \frac 1 {n_k} \sum_{i=1}^{n_k} \ell (x_i, y_i; \mathbf w),
 \end{equation*}
 in which $F_k(\mathbf w)$ is the objective of the $k$'th client \cite{mcmahan2017communication}.
 
-For an alternative aggregation method, we implemented the FedDF algorithm, where the FedAvg's weight averaging is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
+For an alternative aggregation method, we implemented the FedDF algorithm, where the FedAvg's weight averaging is replaced by running ensemble distillation for model fusion using an unlabeled dataset similar to the training datasets \cite{lin2020ensemble}.
 Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^{(l + 1)}$ was produced by distilling the $S$ local models $\mathcal M_{k_i}^{(l)}$ for $10^4$ batch updates against a Kulback-Leibler (KL) divergence criterion with a batch size of $128$ and a learning rate of $10^{-3}$ used for Adam optimization with cosine annealing \cite{losh2016sgdr,kingma2015adam}.
 Early stopping was implemented by calculating KL loss against an unlabeled validation set every $10^3$ updates and terminating if evaluation loss did not fall.
 The CIFAR-100 dataset was used for distillation \cite{alex2009learning}.
 
 \subsection{Physical Devices}
-The project setup, shown in Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
+The project setup, shown in Figure \ref{fig:setup}, was divided into two parts A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
 Crucially, the Pi's were located on a network separate from the HPC to simulate a more realistic communication overhead.
 The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model $\mathcal M_G$.
 The code was designed not to require physical devices, so experiments without hardware timing were run on an NVIDIA A100 for faster training time and a reduced power bill.
@@ -135,11 +135,11 @@ The code was designed not to require physical devices, so experiments without ha
 Every Pi ran a Flask server that transferred models, ran local training and broadcast running memory usage; an important consideration when running on such resource-limited devices.
 The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
 
-The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients and thus dataset partitions, with no constraint of no more than 20 clients being sampled each round: $S \leq 20$.
+The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients and thus dataset partitions with the constraint of no more than 20 clients being sampled each round: $S \leq 20$.
 This was done by storing all $K$ client datasets on every device, and in each communication round $l$, assigning each of the $S$ sampled client datasets to a Raspberry Pi.
 
-The Pi's were connected to a switch connected via cable to the router.
-When turning off the switch, the Pi's were set to instead connect via Wi-Fi, allowing tests of the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
+The Pi's were connected to a switch which was connected via cable to the router.
+When turning off the switch, the Pi's were set to connect via Wi-Fi instead, allowing tests of the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
 For reference, the network used had a bandwidth of 100/100 Mbit/s, all of which was utilised on Ethernet, but only about 40\pro\ on Wi-Fi.
 
 \begin{figure}[htb!]
@@ -153,7 +153,7 @@ For reference, the network used had a bandwidth of 100/100 Mbit/s, all of which 
 \end{figure}\noindent
 
 \subsection{Deep Learning Problem}
-For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes such as birds, cats, and aeroplanes \cite{alex2009learning}.
+As an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes such as birds, cats, and aeroplanes \cite{alex2009learning}.
 Due to device memory limits, all images were greyscaled.
 The training dataset contains 5K images for each of the 10 label.
 
@@ -183,11 +183,11 @@ The training data on a noisy client had all labels replaced with randomly chosen
 We tested performance over the number of noisy clients $N_K\leq K$ to simulate erroneous or even adversarial clients.
 
 \subsection{Evaluation}
-We perform experiments using FedAvg testing the effects of four variables: The number of clients sampled ($S$), the class balance ($\alpha$), the number of local epochs ($E$) and the number of noisy clients ($N_K$). 
+We performed experiments using FedAvg testing the effects of four variables: The number of clients sampled ($S$), the class balance ($\alpha$), the number of local epochs ($E$) and the number of noisy clients ($N_K$). 
 Furthermore, the experiments regarding class balance and noisy clients were also run using the FedDF algorithm.
 
 The experiments varying local epochs were repeated on the physical federation of Raspberry Pi's, both on Ethernet and Wi-Fi.
-This was chosen because altering this parameter changes the runtime of each communication round, while the behaviour for other parameters tested was approximately the same whether using the number of communication rounds or wall time as the $x$-axis.
+This was chosen because altering this parameter changes the runtime of each communication round, while the behaviour for other tested parameters was approximately the same whether using the number of communication rounds or wall time as the $x$-axis.
 
 All experiments used the baseline listed in Table \ref{tab:baseline} except for the parameter being varied in each experiment.
 These were chosen based on existing literature, in particular, \cite{mcmahan2017communication,lin2020ensemble}, and limited pilot experimentation.
@@ -264,7 +264,7 @@ Firstly, the results show that model convergence is possible even though data is
 
 From the Raspberry Pi experiments on Figure \ref{fig:rpi-local-epochs}, we initially note that many accuracy curves fall during much of the learning.
 This effect is continually worse with more local epochs.
-We attribute this problematic behaviour to overfitting towards training sets, and to check this explanation, visualise test performances during local epochs on Figure \ref{fig:accuracy}.
+We attribute this problematic behaviour to overfitting towards training sets, and, to check this explanation, visualise test performances during local epochs on Figure \ref{fig:accuracy}.
 Here, training accuracy on each client skyrockets during local epochs while the training accuracy plummets.
 % TODO: Hard to read
 The direct mitigation is to perform a structured hyperparameter search where better regularising measures for this task are tested.
@@ -276,7 +276,7 @@ When focusing on early learning less impacted by overfitting, the Raspberry Pi t
 More local epochs can be optimal if training time is limited, as seen in minutes 5 to 15 using Ethernet and minutes 5 to 40 for Wi-Fi.
 During this time, the higher number of local epochs result in more time spent on training and less on communication, explaining why the this effect is most evident on relatively slow Wi-Fi.
 There thus exists a trade-off where $E$ should not be too high to induce overfitting but not too low to slow down the rate of training data seen.
-In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies.
+When choosing this parameter, practitioners should be mindful of available training time and communication latencies in the system.
 \begin{figure}[htb!]
     \centering
         \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
@@ -290,14 +290,14 @@ In choosing this parameter, practitioners should be mindful of available trainin
 \noindent
 When running for a fixed number of rounds, as shown in Table \ref{tab:main}, computational and communicational effects are disregarded, and $E=10$ appears optimally as a compromise between under- and overfitting.
 % TODO: Too wordy maybe
-For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced, $\alpha=1$, FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
+For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced, $\alpha=1$, FedAvg performs the same both when sampling half of the clients and when sampling all of the clients.
 Even using only five clients each round, the accuracy ended at $93 \pro$ of all 40, emphasising the stability of model averaging.
-This difference is largest in early rounds where slower convergence is observed for lower $S$ as seen in Appendix Figure \ref{fig:s}.
+This difference is largest in early rounds where lower values of $S$ induce slower convergence, also visualised in Appendix Figure \ref{fig:s}.
 
 However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$.
 The learning improved significantly when training on more balanced classification tasks such as $\alpha=100$ or iid.
 
-For the FedDF experiments with the same hyperparameters, generally much better performance is noted.
+For the FedDF experiments with the same hyperparameters, a generally much higher level of performance is noted.
 We speculate that the distillation procedure avoids the detrimental impact of the overfitted local models by performing a model fusion without averaging over big, bias-inducing parameters.
 This is backed up by Figure \ref{fig:alpha} where the problem of long-term falling performance is removed when using FedDF.
 Empirical prediction probability distributions might thus give a more robust characteristic of the learned knowledge than the model weights themselves.
@@ -318,7 +318,7 @@ This added robustness is strongly exemplified for FedDF in the noise experiments
 Here, having 10 out of the 40 data partitions being noisy ruins the performance of FedAvg thoroughly, while FedDF can perform reasonably even at 30 out of 40.
 Yet again, averaging probabilities instead of model weights appears to minimise the negative impact of fusing models with heterogeneous parameter values.
 
-Though data label difference was simulated, use-cases such as smartphone computer vision or virtual keyboard language modeling have user data distributions that are much more diverse, e.g. one user only photographing their dog and another only selfies, requiring analysis of data variety.
+Though data label difference was simulated, use-cases such as smartphone computer vision or virtual keyboard language modeling have user data distributions that are much more diverse, e.g. one user only photographing their dog and another only landscapes, requiring analysis of data variety.
 In addition to these learning considerations, practitioners should be aware of the fact that FL is not the entire solution to user privacy as user data might be recoverable from trained models weights.
 To mitigate this, FL can be combined with differential privacy methods \cite{xiong2020ldp} to obtain maximally safe learning.
 
