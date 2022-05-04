@@ -182,9 +182,8 @@ The training data on a noisy client had all labels replaced with randomly chosen
 We tested performance over the number of noisy clients $N_K\leq K$ to test for robustness against erroneous or even adversarial clients.
 
 \subsection{Evaluation}
-We perform experiments using FedAvg testing the effects of four variables: The number of clients sampled ($S$), the class balance (as controlled by $\alpha$ or iid.), the number of noisy clients ($N_K$), and the number of local epochs ($E$).
+We perform experiments using FedAvg testing the effects of four variables: The number of clients sampled ($S$), the class balance (as controlled by $\alpha$ or iid.), the number of local epochs ($E$) and the number of noisy clients ($N_K$). 
 Furthermore, the experiments regarding class balance and noisy clients were also run using the FedDF algorithm.
-%TODO: Nævn i samme rækkefølge som i plot
 
 The experiments varying local epochs were repeated on the physical federation of Raspberry Pi's; both on ethernet and Wi-Fi.
 This was motivated by the fact that altering this parameter changes the runtime of each communication round, while the behaviour for other parameters tested was approximately the same whether using number or communication rounds or runtime as the $x$-axis.
@@ -311,9 +310,16 @@ This added robustness is strongly exemplified for FedDF in the noise experiments
 Here, having 10 out of the 40 data partitions being noisy ruins the performance of FedAvg completely, while FedDF can perform reasonably even at 30 out of 40.
 Yet again, averaging probabilities instead of model weights appears to minimise the negative impact of fusing models with heterogeneous parameter values.
 
-\textcolor{red}{
-TODO: Use some discussion to answer our learning objective ''compare our experimental setup with real-world Federated Learning (FL) usecases, and discuss practical challenges faced and FL's impact on user privacy and safety''
-}
+% \textcolor{red}{
+% TODO: Use some discussion to answer our learning objective ''compare our experimental setup with real-world Federated Learning (FL) usecases, and discuss practical challenges faced and FL's impact on user privacy and safety''
+% }
+
+% Learning objectives
+% We should implement FedAvg on a federation of physical devices, analyzing the impact of device amount and number of local epochs on convergence time.
+% We should empirically evaluate further aggregation schemes including distillation-based methods, comparing their robustness against imbalanced and noisy device data.
+% We should be able to compare our experimental setup with real-world Federated Learning (FL) usecases, and discuss practical challenges faced and FL's impact on user privacy and safety.
+
+Following the learning objectives an implementation running on physical devices has been accomplished. Using these we perfomed experiments looking at time, and saw that, as one might expect, the speed of the connection worsened perfomance, as fewer communications rounds could be performed. Using an additional aggregation scheme, in the form of FedDF, an overall improvement was achieved, seen in table \ref{tab:main}, where FedDF outperformed FedAvg in class balance and the noisy clients experiment.  
 
 \subsection{Conclusions}
 The case study performed in this project demonstrated that privacy preserving learning on physical devices is possible as long as algorithmic choices are made with communication efficiency and robustness against data imbalance in mind.
