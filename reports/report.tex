@@ -91,7 +91,7 @@
 \end{abstract}
 %
 \begin{keywords}
-    Federated Learning, Deep Learning, Privacy, Computer Vision
+    Federated Learning, Deep Learning, Privacy
 \end{keywords}
 
 
@@ -316,9 +316,10 @@ TODO: Use some discussion to answer our learning objective ''compare our experim
 }
 
 \subsection{Conclusions}
-\textcolor{red}{
-TODO: Wrap up in a conclusion that answers our introduction more directly? Possibly in a conclusion section?
-}
+The case study performed in this project demonstrated that privacy preserving learning on physical devices is possible as long as algorithmic choices are made with communication efficiency and robustness against data imbalance in mind.
+When using the simple, foundational FedAvg algorithm, running more local training on devices raised overfitting but fewer epochs raised communication overhead.
+The distillation aggregation algorithm FedDF mitigated this overfitting and added robustness towards different data distributions at the cost of more computation on the central server.
+To investigate multiple realistic learning tasks including computer vision models with higher performance, devices with more computing power than Raspberry Pi's such as smartphones could be subject to the same analysis.
 
 \vfill
 \pagebreak
