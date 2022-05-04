@@ -136,8 +136,8 @@ Every Pi ran a Flask server that transferred models, ran local training and broa
 The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
 The Pi's were made globally reachable using port-forwarding.
 
-The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients, each corresponding to a partition of the dataset, as long as no more than 20 clients were sampled each round ($S \leq 20$).
-This was done by storing the entire dataset on each device and assigning each device to a client number each communication round, corresponding to a unique data partition of the complete dataset.
+The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients and thus dataset partitions, with no constraint of no more than 20 clients being sampled each round: $S \leq 20$.
+This was done by storing all $K$ client datasets on each device and for every communication round $l$, assigning Raspberry Pi's to train on each of the $S$ sampled client datasets.
 
 The Pi's were connected to a switch connected via cable to the router.
 If the switch was turned off, the Pi's connected to the router via Wi-Fi, which allowed for testing the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
@@ -154,9 +154,9 @@ For reference, the network used had a bandwidth of 100 Mbit/s both up and down, 
 \end{figure}\noindent
 
 \subsection{Deep Learning Problem}
-For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes, including birds, cats, and aeroplanes \cite{alex2009learning}.
+For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes such as birds, cats, and aeroplanes \cite{alex2009learning}.
 Due to device memory limits, all images were greyscaled.
-The training dataset contains 5K images for each of the 10 labels.
+The training dataset contains 5K images for each of the 10 label.
 
 For the model $\mathcal M$, we chose a network with two convolutional layers followed by two linear layers, which is further detailed in Appendix \ref{app:model}.
 The model was limited in size to accommodate the strict memory limits on the Raspberry Pi's.
@@ -166,7 +166,7 @@ Optimization for the $E$ local epochs on each device was performed by using the 
 \subsection{Data Imbalance and Noise}
 \subsubsection{Dirichlet sampling}
 The total training dataset was divided into $K$ evenly sized partitions among all the clients.
-In practice, dataset class balance can rarely be assumed in FL setting \cite{kai2021advances}.
+In practice, dataset class balance can rarely be assumed in the FL setting \cite{kai2021advances}.
 In order to simulate varying levels of imbalance, the Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, was used.
 The length of the parameter vector  $\bm\alpha$ corresponds to the number of labels, 10, and we let $\alpha_i=\alpha$.
 Every sample $\bm\pi\sim\operatorname{Dir}(\bm\alpha)$ is a probability distribution over labels and $\alpha$ determines the uniformity of this distribution.
@@ -181,15 +181,14 @@ As a comparative baseline, we also simulate random partitions, denoted iid. foll
 \subsubsection{Noisy data}
 To simulate the fact that some user devices can be unreliable, we tested the concept of noisy clients.
 The training data on a noisy client had all labels replaced with randomly chosen classes, removing all signal.
-We tested performance over the number of noisy clients $N_K\leq K$ to test for robustness against erroneous or even adversarial clients.
+We tested performance over the number of noisy clients $N_K\leq K$ to simulate erroneous or even adversarial clients.
 
 \subsection{Evaluation}
-We perform experiments using FedAvg testing the effects of four variables: The number of clients sampled ($S$), the class balance (as controlled by $\alpha$ or iid.), the number of local epochs ($E$) and the number of noisy clients ($N_K$). 
+We perform experiments using FedAvg testing the effects of four variables: The number of clients sampled ($S$), the class balance ($\alpha$), the number of local epochs ($E$) and the number of noisy clients ($N_K$). 
 Furthermore, the experiments regarding class balance and noisy clients were also run using the FedDF algorithm.
 
 The experiments varying local epochs were repeated on the physical federation of Raspberry Pi's, both on Ethernet and Wi-Fi.
-% TODO: Grammarly says this is too wordy
-This was motivated by the fact that altering this parameter changes the runtime of each communication round, while the behaviour for other parameters tested was approximately the same whether using a number or communication rounds or runtime as the $x$-axis.
+This was chosen because altering this parameter changes the runtime of each communication round, while the behaviour for other parameters tested was approximately the same whether using the number of communication rounds or wall time as the $x$-axis.
 
 All experiments used the baseline listed in Table \ref{tab:baseline} except for the parameter being varied in each experiment.
 These were chosen based on existing literature, in particular, \cite{mcmahan2017communication,lin2020ensemble}, and limited pilot experimentation.
@@ -249,7 +248,7 @@ $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
         \multicolumn{4}{c}{FedDF: Noisy clients ($N_K$)}\\
         0 & 10 & 20 & 30 \\
        \hline
-        \textbf{ 54.5 $\pm $0.4 } & $52.0 \pm 2.9$ & $51.6 \pm 1.9$ & $42.9 \pm 0.3$ \\
+        \textbf{ 54.5 $\pm $ 0.4 } & $52.0 \pm 2.9$ & $51.6 \pm 1.9$ & $42.9 \pm 0.3$ \\
 \end{tabular}
     \caption{
     Final test accuracies [\%] of FL models over $K=40$ clients when running for fixed $L=20$ communication rounds.
@@ -317,7 +316,7 @@ This added robustness is strongly exemplified for FedDF in the noise experiments
 Here, having 10 out of the 40 data partitions being noisy ruins the performance of FedAvg thoroughly, while FedDF can perform reasonably even at 30 out of 40.
 Yet again, averaging probabilities instead of model weights appears to minimise the negative impact of fusing models with heterogeneous parameter values.
 
-Though data label difference was simulated, use-cases such as smartphone computer vision or virtual keyboard language modeling have user data distributions that are much more diverse such as one user only taking selfies and another only landscapes.
+Though data label difference was simulated, use-cases such as smartphone CV or virtual keyboard language modeling have user data distributions that are much more diverse such as one user only taking selfies and another only landscapes.
 Apart from these learning considerations, practitioners should also be aware of the fact that FL is not the entire solution to user privacy as private user data might be recoverable from local models weights.
 Mitigating this, FL can be combined with differential privacy methods \cite{xiong2020ldp} to obtain maximally safe learning.
 
