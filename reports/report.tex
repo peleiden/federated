@@ -114,13 +114,13 @@ We implemented FL by setting up $K$ clients each with a disjoint training datase
 A global model, $\mathcal M_G$, was initialised and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
 Each client performed $E$ local epochs of learning before returning the updated local model $\mathcal M_k$ to the server.
 
-For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round, implying an objective function of model weights $w$ when using loss $\ell$
+For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round, minimizing an implicit objective function $f$ of model weights $\mathbf w$ when using loss $\ell$
 \begin{equation*}
-    f(w) = \sum_{k=1}^K \frac{n_k}{n_{\text{total}}} F_k(w),
-    F_k(w) = \frac 1 {n_k} \sum_{i=1}^{n_k} \ell (x_i, y_i; w).
+    f(\mathbf w) = \sum_{k=1}^K \frac{n_k}{n_{\text{total}}} F_k(\mathbf w),\ \ 
+    F_k(\mathbf w) = \frac 1 {n_k} \sum_{i=1}^{n_k} \ell (x_i, y_i; \mathbf w),
 \end{equation*}
+in which $F_k(\mathbf w)$ is the objective of the $k$'th client \cite{mcmahan2017communication}.
 
-\noindent
 For an alternative aggregation method, we implemented the FedDF algorithm, where the FedAvg's weight averaging is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
 Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^{(l + 1)}$ was produced by distilling the $S$ local models $\mathcal M_{k_i}^{(l)}$ for $10^4$ batch updates against a Kulback-Leibler (KL) divergence criterion with a batch size of $128$ and a learning rate of $10^{-3}$ used for Adam optimization with cosine annealing \cite{losh2016sgdr,kingma2015adam}.
 Early stopping was implemented by calculating KL loss against an unlabeled validation set every $10^3$ updates and terminating if evaluation loss did not fall.
@@ -132,9 +132,8 @@ Crucially, the Pi's were located on a network separate from the HPC to simulate 
 The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model $\mathcal M_G$.
 The code was designed not to require physical devices, so experiments without hardware timing could be run on an NVIDIA A100 for faster training time and a reduced power bill.
 
-Every Pi ran a Flask server that transferred models, ran local training and broadcast running memory usage, which was an important consideration when running on such resource-limited devices.
+Every Pi ran a Flask server that transferred models, ran local training and broadcast running memory usage; an important consideration when running on such resource-limited devices.
 The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
-The Pi's were made globally reachable using port-forwarding.
 
 The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients and thus dataset partitions, with no constraint of no more than 20 clients being sampled each round: $S \leq 20$.
 This was done by storing all $K$ client datasets on each device and for every communication round $l$, assigning Raspberry Pi's to train on each of the $S$ sampled client datasets.
@@ -307,7 +306,8 @@ Empirical prediction probability distributions might thus give a more robust cha
          \includegraphics[width=\linewidth]{imgs/feddf-alpha.pdf}
     \caption{
     Performance of the global model on the test set over communication rounds when varying data imbalance using both FedAvg (left) and FedDF.
-    The lines indicate the mean performance of five runs, with the coloured areas outlining the least and most performant repetition at any run.
+    The lines indicate the mean performance of multiple runs, with the coloured areas outlining the least and most performant repetition at any run.
+    The FedAvg experiments were repeated five times, with the much slower FedDF experiments only being run twice.
     }
     \label{fig:alpha}
 \end{figure}\noindent
