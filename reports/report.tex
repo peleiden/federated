@@ -274,7 +274,7 @@ A more general idea is to perform local early stopping, but designing such a rul
 
 When focusing on early learning less impacted by overfitting, the Raspberry Pi timing results reveal that it does not always hold that fewer local epochs are better.
 More local epochs can be optimal if training time is limited, as seen in minutes 5 to 15 using Ethernet and minutes 5 to 40 for Wi-Fi.
-During this time, the higher number of local epochs result in more time spent on training and less on communication, explaining why the slow communication Wi-Fi results strongly show this effect.
+During this time, the higher number of local epochs result in more time spent on training and less on communication, explaining why the this effect is most evident on relatively slow Wi-Fi.
 There thus exists a trade-off where $E$ should not be too high to induce overfitting but not too low to slow down the rate of training data seen.
 In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies.
 \begin{figure}[htb!]
@@ -290,7 +290,7 @@ In choosing this parameter, practitioners should be mindful of available trainin
 \noindent
 When running for a fixed number of rounds, as shown in Table \ref{tab:main}, computational and communicational effects are disregarded, and $E=10$ appears optimally as a compromise between under- and overfitting.
 % TODO: Too wordy maybe
-For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ,$\alpha=1$, FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
+For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced, $\alpha=1$, FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
 Even using only five clients each round, the accuracy ended at $93 \pro$ of all 40, emphasising the stability of model averaging.
 This difference is largest in early rounds where slower convergence is observed for lower $S$ as seen in Appendix Figure \ref{fig:s}.
 
