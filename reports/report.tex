@@ -71,7 +71,7 @@
 \newcommand{\jrs}[1]{\multicolumn{1}{r|}{#1}}
 
 \title{20 Raspberry Pi's, One Model: Federated Learning On Real Hardware}
-\name{Asger Laurits Schultz, Søren Winkel Holm, Gustav Lang Moesmand}
+\name{Søren Winkel Holm, Asger Laurits Schultz, Gustav Lang Moesmand}
 \address{Technical University of Denmark}
 %
 %
@@ -116,8 +116,8 @@ The project aims to investigate the impact of FedAvg hyperparameters, including 
     \centering
     \input{imgs/setup.tikz}
     \caption{
-        Our federated setup performing updates at communication round $l$, at which 20 clients are sampled, each with a dataset partition $k_1\ldots k_{20}$.
-        Raspberry Pi 1 trains a model on partition $k_1$, and Raspberry Pi 20 trains a model on $k_{20}$.
+        Our federated setup performing updates at communication round $l$, at which $S\leq 20$ clients are sampled, each corresponding to a dataset partition $k_1\ldots k_{S}$.
+        Raspberry Pi 1 trains a model as client $k_i$, and Raspberry Pi 20 as $k_j$.
     }
     \label{fig:setup}
 \end{figure}\noindent
@@ -130,10 +130,9 @@ Each client's $E$ local epochs of gradient-based minibatch learning of the local
 For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round.
 
 For an alternative aggregation method, we implemented the FedDF algorithm where the model weight averaging of FedAvg is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
-Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^{(l + 1)}$ was produced by distilling the $S$ local models $\mathcal M_{k_i}$ for $10^4$ batch updates against a Kulback-Leibler  divergence criterion with a batch size of $128$.
-Early stopping was implemented by calculating loss on an unlabeled validation set every $10^3$ updates and terminating if evaluation loss did not fall.
+Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^{(l + 1)}$ was produced by distilling the $S$ local models $\mathcal M_{k_i}^{(l)}$ for $10^4$ batch updates against a Kulback-Leibler (KL) divergence criterion with a batch size of $128$ and a learning rate of $10^{-3}$ used with cosine annealing for Adam \cite{losh2016sgdr,kingma2015adam}.
+Early stopping was implemented by calculating KL loss against an unlabeled validation set every $10^3$ updates and terminating if evaluation loss did not fall.
 The CIFAR-100 dataset was used for distillation \cite{alex2009learning}.
-
 
 \subsection{Physical Devices}
 The project setup, shown in Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
@@ -155,8 +154,8 @@ For reference, the network used had a bandwidth of 100 Mbit/s both up and down, 
 \subsection{Deep Learning Problem}
 For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes, including birds, cats and airplanes \cite{alex2009learning}.
 Due to device memory limits, all images were greyscaled.
+The training dataset contains 50K images of 10 equally numbered classes.
 
-The training dataset contains 50K iages of 10 equally numbered classes.
 For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers, which is further detailed in Appendix \ref{app:model}.
 
 Optimization for the $E$ local epochs on each device was performed by using the Adam optimizer \cite{kingma2015adam} with a learning rate $\eta$, which was decayed every local epoch: $\eta\leftarrow\gamma\eta, \gamma\le 1$.
@@ -183,12 +182,14 @@ The training data on a noisy client had all labels replaced with randomly chosen
 We tested performance over the number of noisy clients $N_K\leq K$ to test for robustness against erroneous or even adversarial clients.
 
 \subsection{Evaluation}
-We perform experiments to test the effects of four variables: The number of clients sampled ($S$), the class balance (as controlled by $\alpha$ or iid.), the number of noisy clients ($N_K$), and the number of local epochs ($E$).
+We perform experiments using FedAvg testing the effects of four variables: The number of clients sampled ($S$), the class balance (as controlled by $\alpha$ or iid.), the number of noisy clients ($N_K$), and the number of local epochs ($E$).
+Furthermore, the experiments regarding class balance and noisy clients were also run using the FedDF algorithm.
+%TODO: Nævn i samme rækkefølge som i plot
 
-The experiments regarding clients sampled and local epochs are repeated on Raspberry Pi's both on ethernet and Wi-Fi.
-Furthermore, the experiments regarding class balance and noisy clients are repeated using the FedDF algorithm.
+The experiments varying local epochs were repeated on the physical federation of Raspberry Pi's; both on ethernet and Wi-Fi.
+This was motivated by the fact that altering this parameter changes the runtime of each communication round, while the behaviour for other parameters tested was approximately the same whether using number or communication rounds or runtime as the $x$-axis.
 
-All experiments used the baseline listed in Table \ref{tab:baseline} except for the parameter varied in each experiment.
+All experiments used the baseline listed in Table \ref{tab:baseline} except for the parameter being varied in each experiment.
 These were chosen based on existing literature, in particular, \cite{mcmahan2017communication,lin2020ensemble}, and limited pilot experimentation.
 
 \begin{table}[htb!]
@@ -205,25 +206,20 @@ These were chosen based on existing literature, in particular, \cite{mcmahan2017
 
 \section{RESULTS}%
 \label{sec:results}
-Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the four experiments run on the Raspberry Pi setup.
+Figure \ref{fig:rpi-local-epochs} shows the experiments run on the Raspberry Pi setup.
 Note that these experiments are limited by time and have thus run different numbers of communication rounds.
 \begin{figure}[htb!]
     \centering
     \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_ethernet.pdf}
     \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_wifi.pdf}
     \caption{Effect of the number of local epochs ($E$) using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
-    The lines show the mean accuracy of three repetitions, while the shaded areas outline the at any time best and worst of the repetitions.}
+    The lines show the mean accuracy of three repetitions, while the shaded areas outline the at any time best and worst of the repetitions.
+    The legend also displays the number of rounds ($L$) each experiment completed before timeout of 50 min.
+}
     \label{fig:rpi-local-epochs}
 \end{figure}\noindent
-    \begin{figure}[htb!]
-    \centering
-    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_ethernet.pdf}
-    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_wifi.pdf}
-    \caption{Effect of the number of clients per round ($S$) using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom) with formatting as in Figure \ref{fig:rpi-local-epochs}.}
-    \label{fig:rpi-clients-per-round}
-\end{figure}\noindent
 
-Table \ref{tab:main} shows the results repeated experiments investigating different parameter choices using FedAvg after $L=20$ communication rounds.
+Table \ref{tab:main} shows the results repeated experiments investigating different parameter choices after $L=20$ communication rounds.
 % Redigér ikke tabel direkte, men redigér table_multirun.py
 \begin{table}[htb!]
     \centering
@@ -262,47 +258,60 @@ $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
     \label{tab:main}
 \end{table}
 
-Figures \ref{fig:rpi-local-epochs} and \ref{fig:rpi-clients-per-round} show the four experiments run on the Raspberry Pi setup.
-\begin{figure}[htb!]
-    \centering
-    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_Ethernet.pdf}
-    \includegraphics[width=\linewidth]{imgs/time_avg_local_epochs_WiFi.pdf}
-    \caption{Effect of the number of local epochs using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
-    The lines show the mean accuracy of three repetitions, while the shaded areas outline the at any time best and worst of the repetitions.}
-    \label{fig:rpi-local-epochs}
-\end{figure}\noindent
-    \begin{figure}[htb!]
-    \centering
-    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_Ethernet.pdf}
-    \includegraphics[width=\linewidth]{imgs/time_avg_clients_per_round_WiFi.pdf}
-    \caption{Effect of the number of clients per round using the Raspberry Pi setup on ethernet (top) and Wi-Fi (bottom).
-    See Figure \ref{fig:rpi-local-epochs} for further description.}
-    \label{fig:rpi-clients-per-round}
-\end{figure}\noindent
-
 \section{DISCUSSION}%
 \label{sec:discussion}
-Firstly, these results show that model convergence is possible even though data is federated across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to in 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
-
-\begin{enumerate}
-    \item Add comments to Raspberry Pi Experiments: Use very short time on clients per round, but focus on local epochs.
-        Comment on the fact that long-term behaviour is overfitting and more local epochs => more overfit.
-        MAINLY: Focus on the trade-off in the number of local epochs in the first 20 minutes, where, especially on WiFi, 10 and 20 local epochs show their worth as there is more computation time.
-    \item To talk about overfitting, use Figure \ref{fig:accuracy} or \ref{fig:accuracy2} and be amazed that FedAvg handles local overfitting so well.
-    \item Comment on class balance and noisy clients using the repeated table numbers (wait for Fed-DF to finish before doing this).
-    \item Discuss how realistic the setup is.
-\end{enumerate}
 
 \begin{figure}[htb!]
     \centering
-        \includegraphics[width=\linewidth]{imgs/accuracyE10.pdf}
+        \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
     \caption{
-        A training trajectory when recording running accuracies on each client in each communication round where each faint line corresponds to $E=10$ local epochs performances of each of the $S=20$ sampled clients.
-        For the baseline $E=20$ case, see Appendix Figure \ref{fig:accuracy2}.
+        A training trajectory when recording running accuracies on each client in each communication round where each faint line corresponds to $E=20$ local epochs performances of each of the $S=20$ sampled clients.
+        For the $E=10$ case, see Appendix Figure \ref{fig:accuracy2}.
     }
     \label{fig:accuracy}
 \end{figure}\noindent
 
+Firstly, the results show that model convergence is possible even though data is federated across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to in 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
+
+From Raspberry Pi experiments on Figure \ref{fig:rpi-local-epochs}, we initially note that many accuracy curves fall during much of the learning.
+This is continually worse with more local epochs.
+We attribute this problematic effect to overfitting towards training sets and to test this explanation visualize test performances during local epochs on Figure \ref{fig:accuracy}.
+Here, training accuracy on each client skyrockets during local epochs while the training accuracy plummets.
+An obvious mitigation is to perform a structured hyperparameter search where better regularizing measures for this task are tested.
+A more general idea is to perform local early stopping, but designing such a rule is non-trivial as we observe examples of the global, average model improving even though all local models overfit as seen in early rounds and during the less biased learning for $E=10$ shown on Appendix Figure \ref{fig:accuracy2}.
+
+When focusing on early learning less impacted by overfitting, the Raspberry Pi timing results reveal that it does not directly hold that fewer local epochs are better.
+If training time is limited, more local epochs might be optimal, as seen in minutes 5 to 15 using Ethernet, and all the way to minute 40 for Wi-Fi.
+During this time, the higher number of local epochs result in more time spent on training and less on communication, explaining why the slow communicating Wi-Fi results show this effect more strongly.
+There thus exists a trade-off where $E$ should not be too high to induce overfitting but not too low to slow down the rate of training data seen.
+In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies.
+
+When running for a fixed number of rounds as shown in Table \ref{tab:main}, computational and communicational effects are disregarded and $E=10$ appears optimally as a compromise between under- and overfitting.
+For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ($\alpha=1$), FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
+Even using only 5 clients each round, the final accuracy reached $93 \pro$ of using all 40, emphasizing the stability of the model averaging.
+\textcolor{red}{
+TODO: Add plot that shows that fewer clients sampled means slower convergence.  Probably in appendix.
+}
+However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$ where significant learning did not occur, while training on more balanced classification tasks such as $\alpha=100$ or iid. sampling results in convergence to significantly better performance.
+
+For the FedDF experiment with the same hyperparameters, much better performance is noted.
+We speculate that the distillation procedure avoids the detrimental impact of the overfitted local models by performing a model fusion without averaging over large, bias-inducing parameters.
+\textcolor{red}{
+TODO: Add comparative FedDF vs. FedAvg plot (might be nice if over alpha) that shows that FedDF does not fall in the same way.
+}
+Empirical prediction probability distributions might thus give a more robust characteristic of the learned knowledge than the model weights themselves do.
+
+This added robustness is strongly exemplified for FedDF in the noise experiments.
+Here, having 10 out of the 40 data partitions being noisy ruins the performance of FedAvg completely, while FedDF can perform reasonably even at 30 out of 40.
+Yet again, averaging probabilities instead of model weights appears to minimise the negative impact of fusing models with heterogeneous parameter values.
+
+\textcolor{red}{
+TODO: Use some discussion to answer our learning objective ''compare our experimental setup with real-world Federated Learning (FL) usecases, and discuss practical challenges faced and FL's impact on user privacy and safety''
+}
+
+\textcolor{red}{
+TODO: Wrap up in a conclusion that answers our introduction more directly? Possibly in a conclusion section?
+}
 
 \vfill
 \pagebreak
@@ -411,10 +420,9 @@ Only rarely was any one label undersampled by more than 5\pro, a testament to th
 
 \begin{figure}[htb!]
     \centering
-        \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
+        \includegraphics[width=\linewidth]{imgs/accuracyE10.pdf}
     \caption{
-        A version of \ref{fig:accuracy} with $E=20$.
-        We note that the high value of local epochs results in a global model which is overfitting.
+        A version of \ref{fig:accuracy} with $E=10$.
     }
     \label{fig:accuracy2}
 \end{figure}\noindent
@@ -425,7 +433,7 @@ Only rarely was any one label undersampled by more than 5\pro, a testament to th
             Algorithm & Steps before convergence & Final accuracy\\
             \hline
             FedAvg & 200 comm. rounds & 62.1 \%\\
-            Centralised & 10 full epochs & 65.3
+            Centralised & 10 full epochs & 65.3 \%
         \end{tabular}
     \caption{
         Test set accuracy when running the above learning algorithms until test set accuracy stopped improving for 3 steps.
