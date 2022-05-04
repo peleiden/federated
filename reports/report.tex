@@ -98,11 +98,11 @@
 \section{INTRODUCTION}
 \label{sec:intro}
 Large-scale surveys have shown that the growing use of Artificial Intelligence (AI) has resulted in a widespread fear about loss of personal privacy \cite{beuc2020consumers, west2018survey}.
-As a part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases such as Siri, Google Chrome, and Gboard \cite{kai2021advances}.
+As part of a general push towards safer AI, large tech companies such as Google and Apple have employed FL methods in cases such as Siri, Google Chrome, and Gboard \cite{kai2021advances}.
 
-The term FL covers the distributed ML setup where multiple clients collaborate in learning from local datasets which are not exchanged, and where a central server aggregates updates \cite{kai2021advances, mcmahan2017communication}.
-When the aggregation is performed by iteratively averaging weights from models, each produced by training for several local epochs on each client, the resulting FL algorithm is the formative \emph{FedAvg} \cite{mcmahan2017communication}.
-To gain faster convergence and better data imbalance robustness, additional aggregation methods have been developed, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}, and we refer to Kairouz et al. for an overview of the field \cite{kai2021advances}.
+The term FL covers distributed ML setups where multiple clients collaborate in learning from local datasets which are not exchanged, and where a central server aggregates local updates \cite{kai2021advances, mcmahan2017communication}.
+Aggregation by iteratively averaging weights from models, each produced by training for several local epochs on each client, is known as the formative \emph{FedAvg} \cite{mcmahan2017communication} algorithm.
+For faster convergence and better data imbalance robustness, additional aggregation methods have been developed, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}. We refer to Kairouz et al. for an overview of the field \cite{kai2021advances}.
 
 Across this rich literature, many benchmarks of FL performance over algorithmic choices exist but are often performed by simulating the federation on central compute clusters.
 In this project, we seek to capture the unique hardware setup of FL use-cases such as smartphones, where a number of computationally weak edge devices hold the data.
@@ -140,7 +140,7 @@ Crucially, the Pi's were located on a network separate from the HPC to simulate 
 The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model.
 The code was designed to not require physical devices, so experiments without physical timing considerations could be run on an NVIDIA A100 for faster training time and a reduced power bill.
 
-Every Pi ran a Flask server that received $\mathcal M_G^{(l)}$ every communication round $l$ and returned the trained local model along with telemetry data such as memory usage, which was an important consideration when running on such resource-limited devices.
+Every Pi ran a Flask server that received $\mathcal M_G^{(l)}$ every communication round $l$ and returned the trained local model along with running memory usage, which was an important consideration when running on such resource-limited devices.
 The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
 The Pi's were made accessible to the HPC using port-forwarding.
 
@@ -153,17 +153,16 @@ For reference, the network used had a bandwidth of 100 Mbit/s both up and down, 
 
 \subsection{Deep Learning Problem}
 For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes, including birds, cats and airplanes \cite{alex2009learning}.
-Due to device memory limits, all images were greyscaled.
-The training dataset contains 50K images of 10 equally numbered classes.
+The training dataset contains 5K images for each of the 10 labels.
 
-For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers, which is further detailed in Appendix \ref{app:model}.
+For the model $\mathcal M$, we chose a network with two convolutional layers followed by two linear layers, which is further detailed in Appendix \ref{app:model}.
+The model was limited in size to accommodate the strict memory limits on the Raspberry Pi's.
 
 Optimization for the $E$ local epochs on each device was performed by using the Adam optimizer \cite{kingma2015adam} with a learning rate $\eta$, which was decayed every local epoch: $\eta\leftarrow\gamma\eta, \gamma\le 1$.
 
 \subsection{Data Imbalance and Noise}
 \subsubsection{Dirichlet sampling}
 The total training dataset was divided into $K$ evenly sized partitions among all the clients.
-
 In practice, dataset class balance can rarely be assumed in FL setting \cite{kai2021advances}.
 In order to simulate varying levels of imbalance, the Dirichlet distribution, $\operatorname{Dir}(\bm\alpha)$, was used.
 The length of the parameter vector  $\bm\alpha$ corresponds to the number of labels, 10, and we let $\alpha_i=\alpha$.
@@ -174,7 +173,7 @@ For $\alpha=1$, every possible $\bm\pi$ is equally likely.
 $\bm\pi$ was sampled for every client, making the label distribution Dirichlet for every client.
 To keep the client datasets disjoint while using a maximal part of the total dataset, we created a client-balancing Dirichlet sampling algorithm described in detail in Appendix \ref{app:diralg}.
 
-As a comparative baseline, we also simulate random partitions and denote this distribution scheme iid. following literature \cite{lin2020ensemble}.
+As a comparative baseline, we also simulate random partitions, denoted iid. following literature \cite{lin2020ensemble}.
 
 \subsubsection{Noisy data}
 To simulate the fact that some user devices can be unreliable, we tested the concept of noisy clients.
@@ -205,7 +204,7 @@ These were chosen based on existing literature, in particular, \cite{mcmahan2017
 
 \section{RESULTS}%
 \label{sec:results}
-Figure \ref{fig:rpi-local-epochs} shows the experiments run on the Raspberry Pi setup.
+Figure \ref{fig:rpi-local-epochs} shows the experiments run on the Pi setup.
 Note that these experiments are limited by time and have thus run different numbers of communication rounds.
 \begin{figure}[htb!]
     \centering
@@ -217,8 +216,7 @@ Note that these experiments are limited by time and have thus run different numb
 }
     \label{fig:rpi-local-epochs}
 \end{figure}\noindent
-
-Table \ref{tab:main} shows the results repeated experiments investigating different parameter choices after $L=20$ communication rounds.
+Table \ref{tab:main} shows the results of repeated experiments investigating different parameter choices after $L=20$ communication rounds.
 % Redigér ikke tabel direkte, men redigér table_multirun.py
 \begin{table}[htb!]
     \centering
@@ -336,7 +334,7 @@ To investigate multiple realistic learning tasks including computer vision model
 \appendix
 \section{Model}
 \label{app:model}
-The model architecture is described below, listing the sequential operations in the foward pass.
+The model architecture is described below, listing the sequential operations in the forward pass.
 \begin{table}[htb!]
     \centering
     \begin{tabular}{l|p{5cm}}
