@@ -297,7 +297,7 @@ This difference is largest in early rounds where slower convergence is observed 
 However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$.
 The learning improved significantly when training on more balanced classification tasks such as $\alpha=100$ or iid.
 
-For the FedDF experiment with the same hyperparameters, much better performance is noted.
+For the FedDF experiments with the same hyperparameters, generally much better performance is noted.
 We speculate that the distillation procedure avoids the detrimental impact of the overfitted local models by performing a model fusion without averaging over big, bias-inducing parameters.
 This is backed up by Figure \ref{fig:alpha} where the problem of long-term falling performance is removed when using FedDF.
 Empirical prediction probability distributions might thus give a more robust characteristic of the learned knowledge than the model weights themselves.
@@ -313,19 +313,20 @@ Empirical prediction probability distributions might thus give a more robust cha
     \label{fig:alpha}
 \end{figure}\noindent
 
+\noindent
 This added robustness is strongly exemplified for FedDF in the noise experiments.
 Here, having 10 out of the 40 data partitions being noisy ruins the performance of FedAvg thoroughly, while FedDF can perform reasonably even at 30 out of 40.
 Yet again, averaging probabilities instead of model weights appears to minimise the negative impact of fusing models with heterogeneous parameter values.
 
-Though data label difference was simulated, use-cases such as smartphone CV or virtual keyboard language modeling have user data distributions that are much more diverse such as one user only taking selfies and another only landscapes.
-Apart from these learning considerations, practitioners should also be aware of the fact that FL is not the entire solution to user privacy as private user data might be recoverable from local models weights.
-Mitigating this, FL can be combined with differential privacy methods \cite{xiong2020ldp} to obtain maximally safe learning.
+Though data label difference was simulated, use-cases such as smartphone computer vision or virtual keyboard language modeling have user data distributions that are much more diverse, e.g. one user only photographing their dog and another only selfies, requiring analysis of data variety.
+In addition to these learning considerations, practitioners should be aware of the fact that FL is not the entire solution to user privacy as user data might be recoverable from trained models weights.
+To mitigate this, FL can be combined with differential privacy methods \cite{xiong2020ldp} to obtain maximally safe learning.
 
 \subsection{Conclusions}
 The case study performed in this project demonstrated that privacy-preserving learning on physical devices is possible as long as algorithmic choices are made with communication efficiency and robustness against data imbalance in mind.
 Using the simple, foundational FedAvg algorithm, running more local training on devices raised overfitting, but fewer epochs raised communication overhead.
 The distillation aggregation algorithm FedDF mitigated this overfitting and added robustness towards different data distributions at the cost of more computation on the central server.
-To investigate multiple realistic learning tasks, including computer vision models with higher performance, devices with more computing power than Raspberry Pi's, such as smartphones, could be subject to the same analysis.
+To investigate multiple realistic learning tasks, including computer vision models with higher performance, a federatio of devices with more computing power than Raspberry Pi's, such as smartphones, could be subject to the same analysis.
 
 \vfill
 \pagebreak
