@@ -101,9 +101,22 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from src.data.make_dataset import get_cifar10, DATA_PATH
 
+    SMALL_SIZE = 40
+    MEDIUM_SIZE = 40
+    BIGGER_SIZE = 44
+
+    plt.figure(figsize=(11, 8))
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=BIGGER_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=MEDIUM_SIZE)   # fontsize of the tick labels
+    plt.rc('ytick', labelsize=MEDIUM_SIZE)   # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
     # Generate example data
     dataset = get_cifar10(DATA_PATH, train=True)
-    alpha, clients, local_data_amount = 0.01, 40, 1000
+    alpha, clients, local_data_amount = 100, 40, 1250
     split = DirichletUnbalanced(alpha).split(clients, local_data_amount, dataset)
     # split = EqualIIDSplit().split(clients, local_data_amount, dataset)
     lens = [len(x) for x in split.values()]
@@ -124,24 +137,13 @@ if __name__ == "__main__":
         plt.barh(range(clients), pos[:, i], left=left)
         left += pos[:, i]
 
-    SMALL_SIZE = 32
-    MEDIUM_SIZE = 36
-    BIGGER_SIZE = 40
-
-    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-    plt.rc('axes', labelsize=BIGGER_SIZE)    # fontsize of the x and y labels
-    plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-    plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-
 
     # for i in range
     plt.ylabel("Client")
     plt.xlabel("Label distribution [%]")
     plt.xlim(-2, 102)
-    plt.title(f"Dirichlet($\\alpha={alpha}$)")
+    plt.title(f"Dirichlet ($\\alpha={alpha}$)")
+    plt.tight_layout()
     plt.savefig(f"reports/imgs/splits({alpha=}).pdf")
     # plt.title(f"IID")
     # plt.savefig(f"reports/imgs/splits(IID).pdf")

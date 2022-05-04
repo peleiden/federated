@@ -294,7 +294,7 @@ However, the class balance results show that this stability was removed when low
 
 \begin{figure}[H]
     \centering
-        % \includegraphics[width=\linewidth]{alpha.pdf}
+         \includegraphics[width=\linewidth]{imgs/feddf-alpha.pdf}
     \caption{
     Performance of the global model on the test set over communication rounds when varying data imbalance using both FedAvg (left) and FedDF.
     The lines indicate the mean performance of five runs, with the coloured areas outlining the least and most performant repetition at any run.
@@ -379,7 +379,7 @@ If any columns sum to more, the corresponding labels are oversampled, and so all
 
 A measure, $u$, is needed to determine how close $\mathbf P$ is to achieving the goal of making every column sum to the same.
 The lowest value of this measure should be achieved for a $\mathbf P$ where every column sums to $C/l$, while it should be progressively higher for poorer $\mathbf P$'s.
-We choose the L1 norm of difference in column sums and $C/l$:
+We chose the L1 norm of difference in column sums and $C/l$:
 \begin{equation*}
     u(\mathbf P) = \sum_{j=1}^{l} \len{\frac{C}{l} - \sum_{i=1}^{C} P_{ij}}
 \end{equation*}
