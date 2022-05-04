@@ -288,16 +288,23 @@ In choosing this parameter, practitioners should be mindful of available trainin
 When running for a fixed number of rounds as shown in Table \ref{tab:main}, computational and communicational effects are disregarded and $E=10$ appears optimally as a compromise between under- and overfitting.
 For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ($\alpha=1$), FedAvg ends up performing the same whether sampling half of the clients or all of the clients for this problem.
 Even using only 5 clients each round, the accuracy ended at $93 \pro$ of using all 40, emphasizing the stability of model averaging.
-This difference is largest in early rounds where slower convergence is observed for lower $S$ as seen on Appendix Figure \ref{fig:alpha-s}.
+This difference is largest in early rounds where slower convergence is observed for lower $S$ as seen on Appendix Figure \ref{fig:s}.
 
 However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$ where significant learning did not occur, while training on more balanced classification tasks such as $\alpha=100$ or iid. sampling results in convergence to significantly better performance.
-This is plainly shown on Figure \ref{fig:alpha-s}.
+
+\begin{figure}[H]
+    \centering
+        % \includegraphics[width=\linewidth]{alpha.pdf}
+    \caption{
+    Performance of the global model on the test set over communication rounds when varying data imbalance using both FedAvg (left) and FedDF.
+    The lines indicate the mean performance of five runs, with the coloured areas outlining the least and most performant repetition at any run.
+    }
+    \label{fig:alpha}
+\end{figure}\noindent
 
 For the FedDF experiment with the same hyperparameters, much better performance is noted.
 We speculate that the distillation procedure avoids the detrimental impact of the overfitted local models by performing a model fusion without averaging over large, bias-inducing parameters.
-\textcolor{red}{
-TODO: Add comparative FedDF vs. FedAvg plot (might be nice if over alpha) that shows that FedDF does not fall in the same way.
-}
+This is backed up by Figure \ref{fig:alpha} where the problem of long-term falling performance is removed when using FedDF.
 Empirical prediction probability distributions might thus give a more robust characteristic of the learned knowledge than the model weights themselves do.
 
 This added robustness is strongly exemplified for FedDF in the noise experiments.
@@ -444,11 +451,10 @@ Only rarely was any one label undersampled by more than 5\pro, a sign of the str
 \end{table}\noindent
 \begin{figure}[htb!]
     \centering
-    \includegraphics[width=\linewidth]{imgs/alphas.pdf}
     \includegraphics[width=\linewidth]{imgs/S.pdf}
-    \caption{Top: Performance of the global model on the test at different communication rounds with varying label sampling parameters. Bottom: Same plot, but with varying number of clients sampled per round, $S$.
+    \caption{Performance of the global model on the test at different communication rounds with varying number of clients sampled per round, $S$.
     The lines indicate the mean performance of five runs, with the coloured areas outlining the least and most performant repetition at any run.}
-    \label{fig:alpha-s}
+    \label{fig:s}
 \end{figure}\noindent
 
 
