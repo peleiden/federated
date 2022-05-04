@@ -156,6 +156,7 @@ For an example learning problem, we chose the CIFAR-10 computer vision (CV) task
 Due to device memory limits, all images were greyscaled.
 The training dataset contains 50K images of 10 equally numbered classes.
 
+The training dataset contains 50K images of 10 equally numbered classes.
 For the model $\mathcal M$, we chose a small network with two convolutional layers followed by two linear layers, which is further detailed in Appendix \ref{app:model}.
 
 Optimization for the $E$ local epochs on each device was performed by using the Adam optimizer \cite{kingma2015adam} with a learning rate $\eta$, which was decayed every local epoch: $\eta\leftarrow\gamma\eta, \gamma\le 1$.
@@ -172,7 +173,7 @@ For $\alpha\to0$, one label dominates, where as for $\alpha\to\infty$, $\bm\pi$ 
 For $\alpha=1$, every possible $\bm\pi$ is equally likely.
 
 $\bm\pi$ was sampled for every client, making the label distribution Dirichlet for every client.
-To keep the client datasets disjoint while using a maximal part of the total dataset, we created and used a client-balancing Dirichlet sampling algorithm described in Appendix \ref{app:diralg}.
+To keep the client datasets disjoint while using a maximal part of the total dataset, we created a client-balancing Dirichlet sampling algorithm described in detail in Appendix \ref{app:diralg}.
 
 As a comparative baseline, we also simulate random partitions and denote this distribution scheme iid. following literature \cite{lin2020ensemble}.
 
