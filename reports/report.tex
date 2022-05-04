@@ -130,17 +130,17 @@ The CIFAR-100 dataset was used for distillation \cite{alex2009learning}.
 The project setup, shown in Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
 Crucially, the Pi's were located on a network separate from the HPC to simulate a more realistic communication overhead.
 The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model $\mathcal M_G$.
-The code was designed not to require physical devices, so experiments without hardware timing could be run on an NVIDIA A100 for faster training time and a reduced power bill.
+The code was designed not to require physical devices, so experiments without hardware timing were run on an NVIDIA A100 for faster training time and a reduced power bill.
 
 Every Pi ran a Flask server that transferred models, ran local training and broadcast running memory usage; an important consideration when running on such resource-limited devices.
 The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
 
 The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients and thus dataset partitions, with no constraint of no more than 20 clients being sampled each round: $S \leq 20$.
-This was done by storing all $K$ client datasets on each device and for every communication round $l$, assigning Raspberry Pi's to train on each of the $S$ sampled client datasets.
+This was done by storing all $K$ client datasets on each device and for every communication round $l$, assigning Raspberry Pi's to train on one of the $S$ sampled client datasets.
 
 The Pi's were connected to a switch connected via cable to the router.
-When turning off the switch, the Pi's connected instead via Wi-Fi, allowing tests of the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
-For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilised on Ethernet, but only about 40\pro\ on Wi-Fi.
+When turning off the switch, the Pi's were set to instead connect via Wi-Fi, allowing tests of the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
+For reference, the network used had a bandwidth of 100/100 Mbit/s, all of which would be utilised on Ethernet, but only about 40\pro\ on Wi-Fi.
 
 \begin{figure}[htb!]
     \centering
