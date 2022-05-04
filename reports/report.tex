@@ -257,14 +257,6 @@ $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
     }
     \label{tab:main}
 \end{table}
-\begin{figure}[htb!]
-    \centering
-    \includegraphics[width=\linewidth]{imgs/alphas.pdf}
-    \includegraphics[width=\linewidth]{imgs/S.pdf}
-    \caption{Top: Performance of the global model on the test at different communication rounds with varying label sampling parameters. Bottom: Same plot, but with varying number of clients sampled per round, $S$.
-    The lines indicate the mean performance of five runs, with the coloured areas outlining the least and most performant repetition at any run.}
-    \label{fig:alpha-s}
-\end{figure}\noindent
 
 \section{DISCUSSION}%
 \label{sec:discussion}
@@ -294,9 +286,9 @@ There thus exists a trade-off where $E$ should not be too high to induce overfit
 In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies, as well as the peculiarities of their specific setup.
 
 When running for a fixed number of rounds as shown in Table \ref{tab:main}, computational and communicational effects are disregarded and $E=10$ appears optimally as a compromise between under- and overfitting.
-For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ($\alpha=1$), FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
+For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ($\alpha=1$), FedAvg ends up performing the same whether sampling half of the clients or all of the clients for this problem.
 Even using only 5 clients each round, the accuracy ended at $93 \pro$ of using all 40, emphasizing the stability of model averaging.
-Figure \ref{fig:alpha-s}, showing the performance over the global model at different communication rounds under different values of $S$, highlights this; lower $S$ mostly hurts training in the early communication rounds, with performance differences barely being distinguishable in later rounds.
+This difference is largest in early rounds where slower convergence is observed for lower $S$ as seen on Appendix Figure \ref{fig:alpha-s}.
 
 However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$ where significant learning did not occur, while training on more balanced classification tasks such as $\alpha=100$ or iid. sampling results in convergence to significantly better performance.
 This is plainly shown on Figure \ref{fig:alpha-s}.
@@ -316,6 +308,7 @@ Yet again, averaging probabilities instead of model weights appears to minimise 
 TODO: Use some discussion to answer our learning objective ''compare our experimental setup with real-world Federated Learning (FL) usecases, and discuss practical challenges faced and FL's impact on user privacy and safety''
 }
 
+\subsection{Conclusions}
 \textcolor{red}{
 TODO: Wrap up in a conclusion that answers our introduction more directly? Possibly in a conclusion section?
 }
@@ -449,8 +442,14 @@ Only rarely was any one label undersampled by more than 5\pro, a sign of the str
     }
     \label{app:centralised}
 \end{table}\noindent
-
-
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=\linewidth]{imgs/alphas.pdf}
+    \includegraphics[width=\linewidth]{imgs/S.pdf}
+    \caption{Top: Performance of the global model on the test at different communication rounds with varying label sampling parameters. Bottom: Same plot, but with varying number of clients sampled per round, $S$.
+    The lines indicate the mean performance of five runs, with the coloured areas outlining the least and most performant repetition at any run.}
+    \label{fig:alpha-s}
+\end{figure}\noindent
 
 
 \end{document}
