@@ -89,11 +89,6 @@
     For choosing the number of local epochs on clients, the physical timings allow us to identify a trade-off between time spent on communication and local computation.
     Testing robustness against imbalanced data across the clients and noisy data, we highlight the potential of using stronger aggregation schemes than averaging by implementing the FedDF \cite{lin2020ensemble} algorithm.
 \end{abstract}
-%
-\begin{keywords}
-    Federated Learning, Deep Learning, Privacy
-\end{keywords}
-
 
 \section{INTRODUCTION}
 \label{sec:intro}
@@ -112,7 +107,7 @@ The project aims to investigate the impact of FedAvg hyperparameters, including 
 \section{METHODS}%
 \label{sec:methods}
 
-\begin{figure}[ht!]
+\begin{figure}[htb!]
     \centering
     \input{imgs/setup.tikz}
     \caption{
@@ -123,13 +118,13 @@ The project aims to investigate the impact of FedAvg hyperparameters, including 
 \end{figure}\noindent
 
 \subsection{FL Methods}
-We implemented FL by setting up $K$ clients with a disjoint partition of the complete training dataset.
+We implemented FL by setting up $K$ clients with a disjoint partition of the training dataset.
 A global model, $\mathcal M_G$, was initialized and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
-Each client's $E$ local epochs of gradient-based minibatch learning of the local dataset were performed before returning the updated model $\mathcal M_k$ to the server.
+Each client's $E$ local epochs of learning of the local dataset were performed before returning the updated model $\mathcal M_k$ to the server.
 
 For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round.
 
-For an alternative aggregation method, we implemented the FedDF algorithm where the model weight averaging of FedAvg is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
+For an alternative aggregation method, we implemented the FedDF algorithm, where the FedAvg's weight averaging is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
 Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^{(l + 1)}$ was produced by distilling the $S$ local models $\mathcal M_{k_i}^{(l)}$ for $10^4$ batch updates against a Kulback-Leibler (KL) divergence criterion with a batch size of $128$ and a learning rate of $10^{-3}$ used with cosine annealing for Adam \cite{losh2016sgdr,kingma2015adam}.
 Early stopping was implemented by calculating KL loss against an unlabeled validation set every $10^3$ updates and terminating if evaluation loss did not fall.
 The CIFAR-100 dataset was used for distillation \cite{alex2009learning}.
