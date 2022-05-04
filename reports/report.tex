@@ -98,16 +98,50 @@ As part of a general push towards safer AI, large tech companies such as Google 
 
 The term FL covers distributed ML setups where multiple clients collaborate in learning from local datasets which are not exchanged and where a central server aggregates local updates \cite{kai2021advances, mcmahan2017communication}.
 Aggregation by iteratively averaging weights from models, each produced by training for several local epochs on each client, is known as the formative \emph{FedAvg} \cite{mcmahan2017communication} algorithm.
-For faster convergence and better data imbalance robustness, additional aggregation methods have been developed, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}. 
+For faster and more stable convergence, additional aggregation methods have been developed, including the ensemble distillation algorithm \emph{FedDF} \cite{lin2020ensemble}. 
 We refer to Kairouz et al. for an overview of the field \cite{kai2021advances}.
 
-Across this rich literature, many benchmarks of FL performance over algorithmic choices exist but are often performed by simulating the federation on central compute clusters.
+Across this rich literature, many benchmarks of FL performance over algorithmic choices exist but are often performed by simulating the federation on central compute clusters \cite{lin2020ensemble}.
 In this project, we seek to capture the unique hardware setup of FL use-cases such as smartphones, where a number of computationally weak edge devices hold the data.
 This is achieved by performing local training of a convolutional neural network (CNN) on 20 Raspberry Pi devices over which CIFAR-10 \cite{alex2009learning} is divided and aggregating these locally trained models centrally using FedAvg.
 The project aims to investigate the impact of FedAvg hyperparameters, including the number of clients per communication round and local epochs on convergence time, analyse aggregation robustness against imbalanced and noisy data, and uncover performance bottlenecks and trade-offs in the physical hardware setting.
 
 \section{METHODS}%
 \label{sec:methods}
+
+\subsection{FL Methods}
+We implemented FL by setting up $K$ clients each with a disjoint training dataset partition of size $n_k$.
+A global model, $\mathcal M_G$, was initialised and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
+Each client performed $E$ local epochs of learning before returning the updated local model $\mathcal M_k$ to the server.
+
+For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round, implying an objective function of model weights $w$ when using loss $\ell$
+\begin{equation*}
+    f(w) = \sum_{k=1}^K \frac{n_k}{n_{\text{total}}} F_k(w),
+    F_k(w) = \frac 1 {n_k} \sum_{i=1}^{n_k} \ell (x_i, y_i; w).
+\end{equation*}
+
+\noindent
+For an alternative aggregation method, we implemented the FedDF algorithm, where the FedAvg's weight averaging is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
+Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^{(l + 1)}$ was produced by distilling the $S$ local models $\mathcal M_{k_i}^{(l)}$ for $10^4$ batch updates against a Kulback-Leibler (KL) divergence criterion with a batch size of $128$ and a learning rate of $10^{-3}$ used for Adam optimization with cosine annealing \cite{losh2016sgdr,kingma2015adam}.
+Early stopping was implemented by calculating KL loss against an unlabeled validation set every $10^3$ updates and terminating if evaluation loss did not fall.
+The CIFAR-100 dataset was used for distillation \cite{alex2009learning}.
+
+\subsection{Physical Devices}
+The project setup, shown in Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
+Crucially, the Pi's were located on a network separate from the HPC to simulate a more realistic communication overhead.
+The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model $\mathcal M_G$.
+The code was designed not to require physical devices, so experiments without hardware timing could be run on an NVIDIA A100 for faster training time and a reduced power bill.
+
+Every Pi ran a Flask server that transferred models, ran local training and broadcast running memory usage, which was an important consideration when running on such resource-limited devices.
+The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
+The Pi's were made globally reachable using port-forwarding.
+
+The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients, each corresponding to a partition of the dataset, as long as no more than 20 clients were sampled each round ($S \leq 20$).
+This was done by storing the entire dataset on each device and assigning each device to a client number each communication round, corresponding to a unique data partition of the complete dataset.
+
+The Pi's were connected to a switch connected via cable to the router.
+If the switch was turned off, the Pi's connected to the router via Wi-Fi, which allowed for testing the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
+For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilised on Ethernet, but only about 40\pro\ on Wi-Fi.
 
 \begin{figure}[htb!]
     \centering
@@ -118,35 +152,6 @@ The project aims to investigate the impact of FedAvg hyperparameters, including 
     }
     \label{fig:setup}
 \end{figure}\noindent
-
-\subsection{FL Methods}
-We implemented FL by setting up $K$ clients with a disjoint partition of the training dataset.
-A global model, $\mathcal M_G$, was initialised and maintained on the central server, and for $L$ rounds, dubbed \emph{communication rounds}, $S \leq K$ clients were sampled, each receiving a copy of $\mathcal M_G$.
-Each client's $E$ local epochs of learning of the local dataset were performed before returning the updated model $\mathcal M_k$ to the server.
-
-For FedAvg, the server aggregated the $S$ returned models by averaging over all model weights, yielding a new global model to be sent out for the next communication round.
-
-For an alternative aggregation method, we implemented the FedDF algorithm, where the FedAvg's weight averaging is replaced with running ensemble distillation for model fusion using an unlabeled dataset which should be similar to the training datasets \cite{lin2020ensemble}.
-Copying the hyperparameters from \cite{lin2020ensemble}, $\mathcal M_G^{(l + 1)}$ was produced by distilling the $S$ local models $\mathcal M_{k_i}^{(l)}$ for $10^4$ batch updates against a Kulback-Leibler (KL) divergence criterion with a batch size of $128$ and a learning rate of $10^{-3}$ used with cosine annealing for Adam \cite{losh2016sgdr,kingma2015adam}.
-Early stopping was implemented by calculating KL loss against an unlabeled validation set every $10^3$ updates and terminating if evaluation loss did not fall.
-The CIFAR-100 dataset was used for distillation \cite{alex2009learning}.
-
-\subsection{Physical Devices}
-The project setup, shown in Figure \ref{fig:setup}, was divided into two pieces: A central high-performance cluster (HPC) and 20 Raspberry Pi 3B's, each with 1 GB memory and a quad-core 1.2 GHz CPU.
-Crucially, the Pi's were located on a network separate from the HPC to simulate a more realistic communication overhead.
-The HPC server was responsible for aggregating the local models trained by the Pi's and evaluating the resulting global model.
-The code was designed not to require physical devices, so experiments without physical timing considerations could be run on an NVIDIA A100 for faster training time and a reduced power bill.
-
-Every Pi ran a Flask server that received $\mathcal M_G^{(l)}$ every communication round $l$ and returned the trained local model along with running memory usage, which was an important consideration when running on such resource-limited devices.
-The Flask server also had a route for sending commands to allow primitive over-the-air-update functionality.
-The Pi's were made accessible to the HPC using port-forwarding.
-
-The Raspberry Pi setup was able to run experiments where $K > 20$, that is, maintaining more than 20 clients, each corresponding to a partition of the dataset, as long as no more than 20 clients were sampled each round ($S \leq 20$).
-This was done by storing the entire dataset on each device and assigning each device to a client number each communication round, corresponding to a unique data partition of the complete dataset.
-
-The Pi's were connected to a switch connected via cable to the router.
-If the switch was turned off, the Pi's connected to the router via Wi-Fi, which allowed for testing the impact of communication overhead in two cases: under relatively fast Ethernet and relatively slow Wi-Fi.
-For reference, the network used had a bandwidth of 100 Mbit/s both up and down, all of which would be utilised on Ethernet, but only about 40\pro\ on Wi-Fi.
 
 \subsection{Deep Learning Problem}
 For an example learning problem, we chose the CIFAR-10 computer vision (CV) task of classifying $32\times 32$ images into object classes, including birds, cats, and aeroplanes \cite{alex2009learning}.
@@ -257,15 +262,6 @@ $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
 \section{DISCUSSION}%
 \label{sec:discussion}
 
-\begin{figure}[htb!]
-    \centering
-        \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
-    \caption{
-        A training trajectory when recording running accuracies on each client in each communication round where each faint line corresponds to $E=20$ local epochs performances of each of the $S=20$ sampled clients.
-        For the $E=10$ case, see Appendix Figure \ref{fig:accuracy2}.
-    }
-    \label{fig:accuracy}
-\end{figure}\noindent
 Firstly, the results show that model convergence is possible even though data is distributed across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
 
 From Raspberry Pi experiments on Figure \ref{fig:rpi-local-epochs}, we initially note that many accuracy curves fall during much of the learning.
@@ -284,6 +280,15 @@ More local epochs can be optimal if training time is limited, as seen in minutes
 During this time, the higher number of local epochs result in more time spent on training and less on communication, explaining why the slow communication Wi-Fi results strongly show this effect.
 There thus exists a trade-off where $E$ should not be too high to induce overfitting but not too low to slow down the rate of training data seen.
 In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies and the peculiarities of their specific setup.
+\begin{figure}[htb!]
+    \centering
+        \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
+    \caption{
+        A training trajectory when recording running accuracies on each client in each communication round where each faint line corresponds to $E=20$ local epochs performances of each of the $S=20$ sampled clients.
+        For the $E=10$ case, see Appendix Figure \ref{fig:accuracy2}.
+    }
+    \label{fig:accuracy}
+\end{figure}\noindent
 
 When running for a fixed number of rounds, as shown in Table \ref{tab:main}, computational and communicational effects are disregarded, and $E=10$ appears optimally as a compromise between under- and overfitting.
 % TODO: Too wordy maybe
