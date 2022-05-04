@@ -260,24 +260,23 @@ $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
 \section{DISCUSSION}%
 \label{sec:discussion}
 
-Firstly, the results show that model convergence is possible even though data is distributed across devices; a conclusion substantiated by the fact that running the $E=1$ experiment converged to 95\pro\ of centralised learning performance as shown in Appendix Table \ref{app:centralised}.
+Firstly, the results show that model convergence is possible even though data is distributed across devices; a conclusion substantiated by the fact that continuing the $E=1$ training resulted in 95\pro\ of centralised learning performance which is shown in Appendix Table \ref{app:centralised}.
 
-From Raspberry Pi experiments on Figure \ref{fig:rpi-local-epochs}, we initially note that many accuracy curves fall during much of the learning.
-% TODO: Grammarly does not like 'this' as it is unclear what this is referring to.
-This is continually worse with more local epochs.
-We attribute this problematic effect to overfitting towards training sets, and to test this explanation visualise test performances during local epochs on Figure \ref{fig:accuracy}.
+From the Raspberry Pi experiments on Figure \ref{fig:rpi-local-epochs}, we initially note that many accuracy curves fall during much of the learning.
+This effect is continually worse with more local epochs.
+We attribute this problematic behaviour to overfitting towards training sets, and to check this explanation, visualise test performances during local epochs on Figure \ref{fig:accuracy}.
 Here, training accuracy on each client skyrockets during local epochs while the training accuracy plummets.
 % TODO: Hard to read
-The obvious mitigation is to perform a structured hyperparameter search where better regularising measures for this task are tested.
+The direct mitigation is to perform a structured hyperparameter search where better regularising measures for this task are tested.
 % TODO: Hard to read sentence
-The more general idea is to perform local early stopping, but designing such a rule is non-trivial as we observe examples of the global, average model improving even though all local models overfit, as seen in early rounds and during the less biased learning for $E=10$ shown on Appendix Figure \ref{fig:accuracy2}.
+A more general idea is to perform local early stopping, but designing such a rule is non-trivial as we observe examples of the global, average model improving even though all local models overfit, as seen in early communication rounds and during the less biased learning for $E=10$ shown on Appendix Figure \ref{fig:accuracy2}.
 
-% TODO: Incomplete comparison. Maybe say something: ...hold that fewer local epochs are better, but instead that...
-When focusing on early learning less impacted by overfitting, the Raspberry Pi timing results reveal that it does not directly hold that fewer local epochs are better.
+
+When focusing on early learning less impacted by overfitting, the Raspberry Pi timing results reveal that it does not always hold that fewer local epochs are better.
 More local epochs can be optimal if training time is limited, as seen in minutes 5 to 15 using Ethernet and minutes 5 to 40 for Wi-Fi.
 During this time, the higher number of local epochs result in more time spent on training and less on communication, explaining why the slow communication Wi-Fi results strongly show this effect.
 There thus exists a trade-off where $E$ should not be too high to induce overfitting but not too low to slow down the rate of training data seen.
-In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies and the peculiarities of their specific setup.
+In choosing this parameter, practitioners should be mindful of available training time and possible communication latencies.
 \begin{figure}[htb!]
     \centering
         \includegraphics[width=\linewidth]{imgs/accuracy.pdf}
@@ -288,13 +287,15 @@ In choosing this parameter, practitioners should be mindful of available trainin
     \label{fig:accuracy}
 \end{figure}\noindent
 
+\noindent
 When running for a fixed number of rounds, as shown in Table \ref{tab:main}, computational and communicational effects are disregarded, and $E=10$ appears optimally as a compromise between under- and overfitting.
 % TODO: Too wordy maybe
-For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ($\alpha=1$), FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
+For the number of clients sampled each round $S$, we note that even though datasets are somewhat imbalanced ,$\alpha=1$, FedAvg performs the same whether sampling half of the clients or all of the clients for this problem.
 Even using only five clients each round, the accuracy ended at $93 \pro$ of all 40, emphasising the stability of model averaging.
 This difference is largest in early rounds where slower convergence is observed for lower $S$ as seen in Appendix Figure \ref{fig:s}.
 
-However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$. Significant learning did not occur while training on more balanced classification tasks such as $\alpha=100$ or iid. Sampling results in convergence to significantly better performance.
+However, the class balance results show that this stability was removed when lowering $\alpha$ to $0.01$.
+The learning improved significantly when training on more balanced classification tasks such as $\alpha=100$ or iid.
 
 For the FedDF experiment with the same hyperparameters, much better performance is noted.
 We speculate that the distillation procedure avoids the detrimental impact of the overfitted local models by performing a model fusion without averaging over big, bias-inducing parameters.
