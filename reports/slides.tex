@@ -1,0 +1,73 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{anyfontsize}
+\graphicspath{{imgs/}}
+
+\newcommand{\NN}{\ensuremath{\mathbb N}}
+\newcommand{\ZZ}{\ensuremath{\mathbb Z}}
+\newcommand{\QQ}{\ensuremath{\mathbb Q}}
+\newcommand{\RR}{\ensuremath{\mathbb R}}
+\newcommand{\CC}{\ensuremath{\mathbb C}}
+\newcommand{\LL}{\ensuremath{\mathbb L}}
+\newcommand{\PP}{\ensuremath{\mathbb P}}
+
+\usetheme{Ilmenau}
+\usecolortheme{beaver}
+
+\setbeamerfont{itemize/enumerate subbody}{size=\scriptsize}
+
+\newcommand{\unit}[1]{\ensuremath{\:\text{#1}}}
+\newcommand{\pro}{\ensuremath{\unit{\%{}}}}
+
+\expandafter\def\expandafter\insertshorttitle\expandafter{%
+  \insertshorttitle\hfill%
+  \insertframenumber\,/\,\inserttotalframenumber}
+
+\setbeamertemplate{itemize item}[square]
+\setbeamertemplate{itemize subitem}[circle]
+\setbeamertemplate{enumerate item}[square]
+
+\title{20 Raspberry Pi's, One Model}
+
+\subtitle{
+    Federated Learning On Real Hardware
+}
+\author[Søren Holm, Asger Schultz, Gustav Moesmand]
+{Søren Winkel Holm, Asger Laurits Schultz, Gustav Lang Moesmand}
+\institute[DTU]{Technical University of Denmark}
+\date{\today}
+
+\begin{document}
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \frametitle{The Presentation}
+    \footnotesize
+    \tableofcontents
+\end{frame}
+
+\section{The Federated Learning Problem}
+\begin{frame}
+\end{frame}
+
+\section{FedAvg on Real Hardware}
+\begin{frame}
+\end{frame}
+
+\section{Robust Aggregation Using FedDF}
+\begin{frame}
+    \frametitle{Federated Robustness}
+\end{frame}
+
+\begin{frame}
+    \frametitle{The FedDF Algorithm}
+\end{frame}
+
+\end{document}

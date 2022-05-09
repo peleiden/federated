@@ -1,5 +1,6 @@
 local_results
 reports/report.pdf
+reports/slides.pdf
 outputs/
 multirun/
 logs
