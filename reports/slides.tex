@@ -59,7 +59,31 @@
 
 \section{FedAvg on Real Hardware}
 \begin{frame}
+    \frametitle{FedAvg: The Simple Algorithm}
+    \begin{enumerate}
+        \item Initialize global model, $\mathcal M_G$
+        \item Distribute to $S<C$ clients
+        \item On each client $s$, train local model $\mathcal M_s$ for $E$ epochs
+        \item Aggregate models
+    \begin{equation*}
+        \mathcal M_G \gets \frac{1}{S} \sum_{s=1}^{S} \mathcal M_s
+    \end{equation*}
+        \item Repeat from step 2 for $L$ communication rounds
+    \end{enumerate}
 \end{frame}
+\frame {
+    \frametitle{A Real-Life Setup}
+    \noindent
+    \parbox[t]{6cm}{
+        \begin{itemize}
+            \item Most experiments focus only on performance under different hyperparameters
+            \item Fail to capture tradeoffs in practical applications
+            \item E.g. if few local epochs is better for convergence, is that worth additional overhead?
+        \end{itemize}    
+    }
+    \hfill
+    \raisebox{\dimexpr-\height+\baselineskip}{\includegraphics[width=.4\textwidth]{imgs/IMG_20220322_214443}}
+}
 
 \section{Robust Aggregation Using FedDF}
 \begin{frame}
