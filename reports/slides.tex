@@ -178,12 +178,12 @@
         }
     \EndFor
     \State{
-        $e_\text{old} \gets \infty, e_\text{new} \gets 0, i \gets 0$
+        $e_\text{old} \gets \infty, e_\text{new} \gets \infty, i \gets 0$
     }
     \State{
         $\mathcal M^{(l+1)}_G \gets \frac 1 S \sum_{s=1}^S \mathcal M^{(l)}_{k_s}$
     }
-    \While{$e_\text{new} \leq e_\text{old} \vee i < 10^4$}
+    \While{$e_\text{new} \leq e_\text{old}$ for up to $10^4$ iterations}
     \State{
         Sample batch $\bm{\mathcal B}$ from distillation dataset
     }
@@ -198,7 +198,7 @@
     \right)}}
             {\partial M^{(l+1)}_G }$
         } \Comment{Grad. of KL (Actually ADAM)}
-        \If{$i$ is multiple of $10^3$}
+        \If{iteration is multiple of $10^3$}
         \State{
             $e_\text{old} \gets e_\text{new}$, $e_\text{new} \gets$ Average KL Div. over test set
         }
