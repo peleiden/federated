@@ -13,6 +13,9 @@
 \usepackage{bm}
 \graphicspath{{imgs/}}
 
+\usepackage{pgf,tikz}
+\usepackage{localpie}
+
 \newcommand{\NN}{\ensuremath{\mathbb N}}
 \newcommand{\ZZ}{\ensuremath{\mathbb Z}}
 \newcommand{\QQ}{\ensuremath{\mathbb Q}}
@@ -60,20 +63,106 @@
 
 \section{The Federated Learning Problem}
 \begin{frame}
+	\frametitle{Introduction}
+	\noindent
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{itemize}
+				\item Multiple clients collaborate to generate global model
+				%\item One of the early adoptions was by Google seeking to improve word recommendation on Android.
+				\item Litterature often benchmarks on central compute clusters.
+				\item We seek to create more true to nature experiments, monitoring the effect of physical hardware.
+			\end{itemize}
+		\end{column}
+		\begin{column}{.5\textwidth}
+
+		\end{column}
+	\end{columns}
 \end{frame}
 
 \begin{frame}
-    \frametitle{A Real-Life Setup}
+	\frametitle{Motivation}
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{itemize}
+				\item Seek to capture problems and trade-offs when using physical hardware
+				\item Find the key hyperparameters of the FedAvg algorithm
+				\item Implement and use a stronger aggregation schemes (FedDF) and compare it agains FedAvg
+			\end{itemize}
+		\end{column}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+    				\centering
+				\scalebox{.6}{\input{imgs/setup.tikz}}
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}
+	\frametitle{The learning problem}	
+	\noindent
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{itemize}
+				\item CIFAR-10 transformed to greyscale
+				\item Model
+					\begin{itemize}
+						\item 2 convolutional layers
+						\item 2 linear layers
+					\end{itemize}
+				\item Adam optimizer
+			\end{itemize}
+		\end{column}
+		\begin{column}{.5\textwidth} 
+			\begin{figure}
+				\centering
+				\includegraphics[width=\textwidth]{imgs/cifar10-greyscale.png}
+			\end{figure}
+		\end{column}	
+	\end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Real-Life Setup}
     \noindent
-    \parbox[t]{6cm}{
-        \begin{itemize}
-            \item Most experiments focus only on performance under different hyperparameters
-            \item Fail to capture tradeoffs in practical applications
-            \item E.g. if few local epochs is better for convergence, is that worth additional overhead?
-        \end{itemize}    
-    }
-    \hfill
-    \raisebox{\dimexpr-\height+\baselineskip}{\includegraphics[width=.4\textwidth]{imgs/IMG_20220322_214443}}
+    \begin{columns}
+	    \begin{column}{.5\textwidth}
+		    \begin{itemize}
+			    \item Most experiments focus only on performance under different hyperparameters
+			    \item Fail to capture tradeoffs in practical applications
+			    \item E.g. if few local epochs is better for convergence, is that worth additional overhead?
+		    \end{itemize}    
+	    \end{column}
+	    \begin{column}{.5\textwidth}
+		    \includegraphics[width=1\textwidth]{imgs/IMG_20220322_214443}
+	    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Unbalanced data}
+	\noindent
+	\begin{columns}
+		\begin{column}{.45\textwidth}
+			\begin{itemize}
+				\item Real world data spread across clients are bound to be unbalanced
+				\item To simulate this we use Dirichlet sampling
+				\item One key parameter $\alpha$
+				\item $\alpha \to 0$ leads to imbalance
+			\end{itemize}
+		\end{column}
+		\begin{column}{.55\textwidth}
+			\begin{figure}[htb!]
+				\centering
+				\includegraphics[width=0.49\linewidth]{imgs/splits(alpha=0.01)}
+				\includegraphics[width=0.49\linewidth]{imgs/splits(alpha=1).pdf}
+				\includegraphics[width=0.49\linewidth]{imgs/splits(alpha=100)}
+				\includegraphics[width=0.49\linewidth]{imgs/splits(IID)}
+			\end{figure}
+		\end{column}
+	\end{columns}
+
 \end{frame}
 
 \section{FedAvg on Real Hardware}
