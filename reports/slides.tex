@@ -73,10 +73,10 @@
 
 \section{FedAvg on Real Hardware}
 \begin{frame}
-    \frametitle{FedAvg: The Simple Algorithm}
+    \frametitle{FedAvg: The Simple Algorithm [2]}
     \begin{enumerate}
         \item Initialize global model, $\mathcal M_G$
-        \item Distribute to $S<C$ clients
+        \item Distribute to $S \le K$ randomly sampled clients
         \item On each client $s$, train local model $\mathcal M_s$ for $E$ epochs
         \item Aggregate models
     \begin{equation*}
