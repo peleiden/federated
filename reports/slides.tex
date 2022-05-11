@@ -286,12 +286,12 @@
     }
     \State{
         $\mathcal M^{(l+1)}_G \gets \mathcal M^{(l+1)}_G - 
-        \frac{\partial 
+        \eta \frac{\partial
             \operatorname{KL}{\left(
                 \mathbf T, \sigma(\mathcal M^{(l+1)}_G(\bm{\mathcal B}))
     \right)}}
             {\partial M^{(l+1)}_G }$
-        } \Comment{Grad. of KL (Actually ADAM)}
+        }\Comment{Grad. of KL (ADAM)}
         \If{iteration is multiple of $10^3$}
         \State{
             $e_\text{old} \gets e_\text{new}$, $e_\text{new} \gets$ Average KL Div. over test set
@@ -357,9 +357,13 @@
 
 \begin{frame}
     \begin{itemize}
-        \item Thank you for listening
-        \item LE FUNNY MAYMAY
+        \item Thank you for listening!
     \end{itemize}
+    \begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{imgs/maymay.jpg}
+    \caption{Asger in his room while running experiments}
+    \end{figure}
 \end{frame}
 
 
