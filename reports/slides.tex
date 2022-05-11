@@ -57,6 +57,20 @@
 \begin{frame}
 \end{frame}
 
+\begin{frame}
+    \frametitle{A Real-Life Setup}
+    \noindent
+    \parbox[t]{6cm}{
+        \begin{itemize}
+            \item Most experiments focus only on performance under different hyperparameters
+            \item Fail to capture tradeoffs in practical applications
+            \item E.g. if few local epochs is better for convergence, is that worth additional overhead?
+        \end{itemize}    
+    }
+    \hfill
+    \raisebox{\dimexpr-\height+\baselineskip}{\includegraphics[width=.4\textwidth]{imgs/IMG_20220322_214443}}
+\end{frame}
+
 \section{FedAvg on Real Hardware}
 \begin{frame}
     \frametitle{FedAvg: The Simple Algorithm}
@@ -71,19 +85,61 @@
         \item Repeat from step 2 for $L$ communication rounds
     \end{enumerate}
 \end{frame}
-\frame {
-    \frametitle{A Real-Life Setup}
-    \noindent
-    \parbox[t]{6cm}{
-        \begin{itemize}
-            \item Most experiments focus only on performance under different hyperparameters
-            \item Fail to capture tradeoffs in practical applications
-            \item E.g. if few local epochs is better for convergence, is that worth additional overhead?
-        \end{itemize}    
-    }
-    \hfill
-    \raisebox{\dimexpr-\height+\baselineskip}{\includegraphics[width=.4\textwidth]{imgs/IMG_20220322_214443}}
-}
+
+\begin{frame}
+    \frametitle{Parameter Effects}
+    \begin{itemize}
+        \item Experiments with different parameter choices
+        \item $L$ is constant, so larger $E$ increases total number of epochs
+    \end{itemize}
+    \begin{table}
+        \footnotesize
+        \centering
+        \begin{tabular}{llll}
+            \hline
+            \multicolumn{4}{c}{Local epochs ($E$)}\\
+            1 & 10 & 20 & 40 \\
+            \hline
+            $48.0 \pm 0.9$ & \textbf{ 52.2 $\pm$ 2.0 } & $37.6 \pm 2.4$ & $22.2 \pm 2.0$ \\
+            \multicolumn{4}{c}{Clients samped ($S$)}\\
+            5 & 10 & 20 & 40 \\
+            \hline
+            $35.4 \pm 4.8$ & $37.4 \pm 2.6$ & \textbf{ 38.1 $\pm$ 2.0 } & \textbf{ 38.1 $\pm$ 2.5 } \\
+        \end{tabular}
+        \caption{Test accuracy in \%\ after 20 communication rounds.}
+    \end{table}
+\end{frame}
+
+\begin{frame}
+    \frametitle{A Practical Case Study}
+    \small
+    \begin{itemize}
+        \item $L=20$ is at very different points for different experiments
+        \item Tendency to get worse for too many local epochs
+        \item Communication overhead is an important consideration
+    \end{itemize}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=.49\linewidth]{imgs/time_avg_local_epochs_ethernet.pdf}
+        \includegraphics[width=.49\linewidth]{imgs/time_avg_local_epochs_wifi.pdf}
+    \end{figure}\noindent
+\end{frame}
+
+\begin{frame}
+\frametitle{A Practical Case Study, But...}
+    \small
+    \begin{itemize}
+        \item This is just one setup
+        \item Simple model with simple dataset
+        \item Very little regularization effort
+    \end{itemize}
+    Our experiment highlights tradeoffs and considerations that in practical applications, but severity and good design choices will vary.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=.49\linewidth]{imgs/time_avg_clients_per_round_ethernet.pdf}
+        \includegraphics[width=.49\linewidth]{imgs/time_avg_clients_per_round_wifi.pdf}
+    \end{figure}\noindent
+\end{frame}
 
 \section{Robust Aggregation Using FedDF}
 \begin{frame}
