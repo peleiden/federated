@@ -129,9 +129,9 @@
     \begin{columns}
 	    \begin{column}{.5\textwidth}
 		    \begin{itemize}
-			    \item Most experiments focus only on performance under different hyperparameters
-			    \item Fail to capture tradeoffs in practical applications
-			    \item E.g. if few local epochs is better for convergence, is that worth additional overhead?
+			    \item Setup consists of 20 Raspberry Pies 
+			    \item Both Ethernet and Wifi capability to test for different amounts of network overhead
+			    \item Multiple synthetic clients on each device allowing for an increased variety in seen datasets in when sampling clients
 		    \end{itemize}    
 	    \end{column}
 	    \begin{column}{.5\textwidth}
@@ -149,7 +149,11 @@
 				\item Real world data spread across clients are bound to be unbalanced
 				\item To simulate this we use Dirichlet sampling
 				\item One key parameter $\alpha$
-				\item $\alpha \to 0$ leads to imbalance
+					\begin{itemize}
+						\item $\alpha \to 0$ leads to imbalance
+						\item $\alpha \to \infty$ leadsto balance
+						\item We observed $\alpha \geq 100$ was more balanced than IID
+					\end{itemize}
 			\end{itemize}
 		\end{column}
 		\begin{column}{.55\textwidth}
