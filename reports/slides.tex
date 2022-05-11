@@ -63,7 +63,7 @@
 
 \section{The Federated Learning Problem}
 \begin{frame}
-	\frametitle{Introduction}
+	\frametitle{Federated Learning}
 	\noindent
 	\begin{columns}
 		\begin{column}{.5\textwidth}
@@ -129,7 +129,12 @@
 						\item 2 linear layers
 					\end{itemize}
 				\item Adam optimizer
-                                \item Learning rate decay
+                                \item Exponential learning rate decay
+					\begin{itemize}
+						\item $\gamma = 0.995$
+						\item Decayed every local epoch
+					\end{itemize}
+				\item Batch size $= 16$
 			\end{itemize}
 		\end{column}
 		\begin{column}{.5\textwidth} 
