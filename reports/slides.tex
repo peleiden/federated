@@ -277,10 +277,10 @@
         }
     \EndFor
     \State{
-        $e_\text{old} \gets \infty, e_\text{new} \gets \infty, i \gets 0$
+        $\mathcal M^{(l+1)}_G \gets \frac 1 S \sum_{s=1}^S \mathcal M^{(l)}_{k_s}$
     }
     \State{
-        $\mathcal M^{(l+1)}_G \gets \frac 1 S \sum_{s=1}^S \mathcal M^{(l)}_{k_s}$
+        $e_\text{old} \gets \infty, e_\text{new} \gets \infty$
     }
     \While{$e_\text{new} \leq e_\text{old}$ for up to $10^4$ iterations}
     \State{
