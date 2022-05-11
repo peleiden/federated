@@ -69,9 +69,9 @@
 		\begin{column}{.5\textwidth}
 			\begin{itemize}
 				\item Multiple clients collaborate to generate global model
-				\item Pioneered by Google due to privacy and size of data sets 
-				\item Litterature often benchmarks on central compute clusters
-				\item How does physical devices impact results and perfomance
+				%\item One of the early adoptions was by Google seeking to improve word recommendation on Android.
+				\item Litterature often benchmarks on central compute clusters.
+				\item We seek to create more true to nature experiments, monitoring the effect of physical hardware.
 			\end{itemize}
 		\end{column}
 		\begin{column}{.5\textwidth}
@@ -111,8 +111,7 @@
 						\item 2 convolutional layers
 						\item 2 linear layers
 					\end{itemize}
-				\item Adam optimizer on clients
-				\item Learning rate decay
+				\item Adam optimizer
 			\end{itemize}
 		\end{column}
 		\begin{column}{.5\textwidth} 
@@ -125,7 +124,24 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{Unbalanced Data}
+    \frametitle{Real-Life Setup}
+    \noindent
+    \begin{columns}
+	    \begin{column}{.5\textwidth}
+		    \begin{itemize}
+			    \item Setup consists of 20 Raspberry Pies 
+			    \item Both Ethernet and Wifi capability to test for different amounts of network overhead
+			    \item Multiple synthetic clients on each device allowing for an increased variety in seen datasets in when sampling clients
+		    \end{itemize}    
+	    \end{column}
+	    \begin{column}{.5\textwidth}
+		    \includegraphics[width=1\textwidth]{imgs/IMG_20220322_214443}
+	    \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Unbalanced data}
 	\noindent
 	\begin{columns}
 		\begin{column}{.45\textwidth}
@@ -135,8 +151,8 @@
 				\item One key parameter $\alpha$
 					\begin{itemize}
 						\item $\alpha \to 0$ leads to imbalance
-						\item $\alpha \to \infty$ leads to balance
-						\item Default value for alpha $\alpha=1$
+						\item $\alpha \to \infty$ leadsto balance
+						\item We observed $\alpha \geq 100$ was more balanced than IID
 					\end{itemize}
 			\end{itemize}
 		\end{column}
