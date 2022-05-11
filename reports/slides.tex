@@ -69,25 +69,9 @@
 		\begin{column}{.5\textwidth}
 			\begin{itemize}
 				\item Multiple clients collaborate to generate global model
-				%\item One of the early adoptions was by Google seeking to improve word recommendation on Android.
-				\item Litterature often benchmarks on central compute clusters.
-				\item We seek to create more true to nature experiments, monitoring the effect of physical hardware.
-			\end{itemize}
-		\end{column}
-		\begin{column}{.5\textwidth}
-
-		\end{column}
-	\end{columns}
-\end{frame}
-
-\begin{frame}
-	\frametitle{Motivation}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
-			\begin{itemize}
-				\item Seek to capture problems and trade-offs when using physical hardware
-				\item Find the key hyperparameters of the FedAvg algorithm
-				\item Implement and use a stronger aggregation scheme (FedDF) and compare it agains FedAvg
+				%\item Pioneered by Google motivated by privacy and size of data sets
+				\item Literature often benchmarks on central compute clusters
+				\item How does physical devices impact performance?
 			\end{itemize}
 		\end{column}
 		\begin{column}{.5\textwidth}
@@ -100,27 +84,16 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{The Learning Problem}	
-	\noindent
-	\begin{columns}
-		\begin{column}{.5\textwidth}
+	\frametitle{Motivation}
+	% \begin{columns}
+	% 	\begin{column}{.5\textwidth}
 			\begin{itemize}
-				\item CIFAR-10 transformed to greyscale
-				\item Model
-					\begin{itemize}
-						\item 2 convolutional layers
-						\item 2 linear layers
-					\end{itemize}
-				\item Adam optimizer
+				\item Seek to capture problems and trade-offs when using physical hardware
+				\item Study key hyperparameters of the FedAvg algorithm
+				\item Implement and use a stronger aggregation scheme (FedDF) and compare it agains FedAvg
 			\end{itemize}
-		\end{column}
-		\begin{column}{.5\textwidth} 
-			\begin{figure}
-				\centering
-				\includegraphics[width=\textwidth]{imgs/cifar10-greyscale.png}
-			\end{figure}
-		\end{column}	
-	\end{columns}
+		% \end{column}
+	% \end{columns}
 \end{frame}
 
 \begin{frame}
@@ -141,6 +114,31 @@
 \end{frame}
 
 \begin{frame}
+	\frametitle{The Learning Problem}	
+	\noindent
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{itemize}
+				\item CIFAR-10 transformed to greyscale
+				\item Model
+					\begin{itemize}
+						\item 2 convolutional layers
+						\item 2 linear layers
+					\end{itemize}
+				\item Adam optimizer
+                                \item Learning rate decay
+			\end{itemize}
+		\end{column}
+		\begin{column}{.5\textwidth} 
+			\begin{figure}
+				\centering
+				\includegraphics[width=\textwidth]{imgs/cifar10-greyscale.png}
+			\end{figure}
+		\end{column}	
+	\end{columns}
+\end{frame}
+
+\begin{frame}
 	\frametitle{Unbalanced data}
 	\noindent
 	\begin{columns}
@@ -151,8 +149,8 @@
 				\item One key parameter $\alpha$
 					\begin{itemize}
 						\item $\alpha \to 0$ leads to imbalance
-						\item $\alpha \to \infty$ leadsto balance
-						\item We observed $\alpha \geq 100$ was more balanced than IID
+						\item $\alpha \to \infty$ leads to balance
+						\item Default for all experiments: $\alpha=1$
 					\end{itemize}
 			\end{itemize}
 		\end{column}
