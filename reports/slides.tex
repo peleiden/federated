@@ -6,6 +6,11 @@
 \usepackage{mathtools}
 \usepackage{multirow}
 \usepackage{anyfontsize}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{bm}
 \graphicspath{{imgs/}}
 
 \newcommand{\NN}{\ensuremath{\mathbb N}}
@@ -80,7 +85,7 @@
         \item On each client $s$, train local model $\mathcal M_s$ for $E$ epochs
         \item Aggregate models
     \begin{equation*}
-        \mathcal M_G \gets \frac{1}{S} \sum_{s=1}^{S} \mathcal M_s
+        \mathcal M_G \gets \frac{1}{S} \sum_{s=1}^{S} \mathcal M_{k_s}
     \end{equation*}
         \item Repeat from step 2 for $L$ communication rounds
     \end{enumerate}
@@ -144,10 +149,74 @@
 \section{Robust Aggregation Using FedDF}
 \begin{frame}
     \frametitle{Federated Robustness}
+    \begin{itemize}
+        \item World of theory: IID, no label noise
+        \item Weight averaging $\Rightarrow$ all client datasets are equal
+        \item "The characterization of cross-client differences in real-world partitioned datasets is an important open question" [Ch. 3.1, 1]
+    \end{itemize}
+
+    \begin{example}[GBoard Users]
+        \begin{itemize}
+            \item User 1: Long, professional emails
+            \item User 2: Angry YouTube comments
+            \item User 3: In Dutch, accidentally combined with English data
+        \end{itemize}
+    \end{example}
 \end{frame}
 
 \begin{frame}
     \frametitle{The FedDF Algorithm}
+    \begin{algorithm}[H]
+    \caption{FedDF}
+    \label{alg:dir}
+    \scriptsize
+    \begin{algorithmic}
+    \For{$l$ from 1 to $L$}
+    \For{$s$ from 1 to $S$ in parallel}
+        \State{
+            $\mathcal M^{(l)}_{k_s} \gets \mathcal M^{(l)}_G$, then train $\mathcal M^{(l)}_{k_s}$ locally for $E$ epochs on partition $k_s$
+        }
+    \EndFor
+    \State{
+        $e_\text{old} \gets \infty, e_\text{new} \gets 0, i \gets 0$
+    }
+    \State{
+        $\mathcal M^{(l+1)}_G \gets \frac 1 S \sum_{s=1}^S \mathcal M^{(l)}_{k_s}$
+    }
+    \While{$e_\text{new} \leq e_\text{old} \vee i < 10^4$}
+    \State{
+        Sample batch $\bm{\mathcal B}$ from distillation dataset
+    }
+    \State{
+        $\mathbf T \gets \sigma(\frac 1 S \sum_{s=1}^S \mathcal M^{(l)}_{k_s}(\bm{\mathcal B}))$\Comment{Sigmoid of avg. client logits}
+    }
+    \State{
+        $\mathcal M^{(l+1)}_G \gets \mathcal M^{(l+1)}_G - 
+        \frac{\partial 
+            \operatorname{KL}{\left(
+                \mathbf T, \sigma(\mathcal M^{(l+1)}_G(\bm{\mathcal B}))
+    \right)}}
+            {\partial M^{(l+1)}_G }$
+        } \Comment{Grad. of KL (Actually ADAM)}
+        \If{$i$ is multiple of $10^3$}
+        \State{
+            $e_\text{old} \gets e_\text{new}$, $e_\text{new} \gets$ Average KL Div. over test set
+        }
+        \EndIf
+    \EndWhile
+    \EndFor
+    \end{algorithmic}
+    \end{algorithm}
 \end{frame}
+
+\begin{frame}
+    \frametitle{Noisy Clients}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Data Imbalance}
+\end{frame}
+
+
 
 \end{document}
