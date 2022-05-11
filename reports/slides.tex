@@ -181,7 +181,7 @@
     \begin{enumerate}
         \item Initialize global model, $\mathcal M_G$
         \item Distribute to $S \le K$ randomly sampled devices
-        \item On each client $s$, train local model $\mathcal M_s$ for $E$ epochs
+        \item On each client $k_s$, train local model $\mathcal M_{k_s}$ for $E$ epochs
         \item Aggregate models
     \begin{equation*}
         \mathcal M_G \gets \frac{1}{S} \sum_{s=1}^{S} \mathcal M_{k_s}
